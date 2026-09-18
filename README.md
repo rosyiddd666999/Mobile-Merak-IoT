@@ -144,6 +144,71 @@ flutter test
 
 ---
 
+## 🔑 First User Setup / Setup User Pertama
+
+> Backend FastAPI di `https://***REMOVED***` **tidak menyediakan endpoint publik untuk registrasi user baru** (`POST /auth/register` juga butuh JWT). Oleh karena itu, sebelum aplikasi bisa login, user admin pertama harus di-seed langsung ke database server.
+>
+> Backend **tidak menyediakan endpoint publik untuk registrasi** — seed admin pertama langsung di server.
+
+# 3. Environment (copy & edit)
+cp .env.example .env   # jika belum ada .env — sesuaikan BASE_URL & API_KEY_ANDROID
+
+# 4. Run
+flutter run
+
+# 5. Quality gates
+flutter analyze
+flutter test
+```
+
+---
+
+## ⚙️ Configuration / Konfigurasi
+
+Environment via `--dart-define` (lihat `MOBILE.md` §12 untuk detail penuh):
+
+| Key | Example | Required | Description / Keterangan |
+|-----|---------|----------|--------------------------|
+| `BASE_URL` | `https://***REMOVED***` | Yes | Base REST API FastAPI (tanpa trailing `/api`) |
+| `API_KEY_ANDROID` | `xxx` | Yes | Header `X-API-Key` tiap request; `401` bila salah/tidak dikirim |
+| `MQTT_HOST` | `<host>.s1.eu.hivemq.cloud` | Yes | Host saja (tanpa skema), koneksi native |
+| `MQTT_PORT` | `8883` | Yes | `8883` = MQTTS native; jangan pakai `8884` (WebSocket khusus web) |
+| `MQTT_USERNAME` | `***REMOVED***` | Yes | Sama dengan kredensial server |
+| `MQTT_PASSWORD` | `***` | Yes | Bisa di-refresh dinamis dari `GET /api/incubator/settings` |
+| `CCTV_BASE_URL` | `https://***REMOVED***` | Yes | Biasanya = `BASE_URL`; dipisah agar mode dev bisa ke `http://<IP>:5000` |
+| `CCTV_INKUBATOR_PATH` | `/video_feed` | No | Default sesuai `nginx.conf` |
+| `CCTV_KANDANG_PATH` | `/kandang_feed` | No | Default sesuai `nginx.conf` |
+| `CCTV_HEALTH_PATH` | `/cctv_health` | No | Health-check stream |
+
+Generate hash bcrypt dengan:
+
+```bash
+python3 -c "import bcrypt; print(bcrypt.hashpw(b'admin123', bcrypt.gensalt()).decode())"
+```
+
+Single source of truth untuk arsitektur lengkap: [`MOBILE.md`](./MOBILE.md). Design tokens & konsistensi UI: [`DESIGN.md`](./DESIGN.md).
+
+---
+
+## 📦 Build
+
+```bash
+flutter build apk \
+  --dart-define=BASE_URL=https://***REMOVED*** \
+  --dart-define=API_KEY_ANDROID=xxx \
+  --dart-define=MQTT_HOST=<host>.s1.eu.hivemq.cloud \
+  --dart-define=MQTT_PORT=8883 \
+  --dart-define=MQTT_USERNAME=***REMOVED*** \
+  --dart-define=MQTT_PASSWORD=xxx \
+  --dart-define=CCTV_BASE_URL=https://***REMOVED***
+
+flutter build appbundle --dart-define=BASE_URL=... # dst, sama
+```
+
+---
+
+---
+
 ## ⚙️ Configuration / Konfigurasi
 
 Environment via `--dart-define` (lihat `MOBILE.md` §12 untuk detail penuh):
