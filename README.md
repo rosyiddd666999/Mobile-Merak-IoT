@@ -150,39 +150,35 @@ flutter test
 >
 > Backend **tidak menyediakan endpoint publik untuk registrasi** — seed admin pertama langsung di server.
 
-### Cara Seed User Pertama (via SSH / langsung di server)
+# 3. Environment (copy & edit)
+cp .env.example .env   # jika belum ada .env — sesuaikan BASE_URL & API_KEY_ANDROID
 
-Masuk ke server backend, lalu jalankan salah satu opsi berikut sesuai stack yang dipakai:
+# 4. Run
+flutter run
 
-**Opsi A — Python script langsung (paling cepat):**
-
-```python
-# seed_admin.py - jalankan di server, di folder backend
-from app.core.security import hash_password  # sesuaikan import
-from app.db.session import SessionLocal
-from app.models.user import User  # sesuaikan path model
-
-db = SessionLocal()
-admin = User(
-    id="admin01",
-    email="admin@merak.id",
-    password_hash=hash_password("admin123"),  # ganti password default
-    nama="Admin Kampung Merak",
-    role="admin",
-)
-db.add(admin)
-db.commit()
-db.close()
-print("Admin user berhasil dibuat")
+# 5. Quality gates
+flutter analyze
+flutter test
 ```
 
-**Opsi B — SQL langsung (jika hash sudah diketahui):**
+---
 
-```sql
--- Ganti <HASH_BCRYPT> dengan hasil dari bcrypt("admin123")
-INSERT INTO users (id, email, password_hash, nama, role)
-VALUES ('admin01', 'admin@merak.id', '<HASH_BCRYPT>', 'Admin', 'admin');
-```
+## ⚙️ Configuration / Konfigurasi
+
+Environment via `--dart-define` (lihat `MOBILE.md` §12 untuk detail penuh):
+
+| Key | Example | Required | Description / Keterangan |
+|-----|---------|----------|--------------------------|
+| `BASE_URL` | `https://***REMOVED***` | Yes | Base REST API FastAPI (tanpa trailing `/api`) |
+| `API_KEY_ANDROID` | `xxx` | Yes | Header `X-API-Key` tiap request; `401` bila salah/tidak dikirim |
+| `MQTT_HOST` | `<host>.s1.eu.hivemq.cloud` | Yes | Host saja (tanpa skema), koneksi native |
+| `MQTT_PORT` | `8883` | Yes | `8883` = MQTTS native; jangan pakai `8884` (WebSocket khusus web) |
+| `MQTT_USERNAME` | `***REMOVED***` | Yes | Sama dengan kredensial server |
+| `MQTT_PASSWORD` | `***` | Yes | Bisa di-refresh dinamis dari `GET /api/incubator/settings` |
+| `CCTV_BASE_URL` | `https://***REMOVED***` | Yes | Biasanya = `BASE_URL`; dipisah agar mode dev bisa ke `http://<IP>:5000` |
+| `CCTV_INKUBATOR_PATH` | `/video_feed` | No | Default sesuai `nginx.conf` |
+| `CCTV_KANDANG_PATH` | `/kandang_feed` | No | Default sesuai `nginx.conf` |
+| `CCTV_HEALTH_PATH` | `/cctv_health` | No | Health-check stream |
 
 Generate hash bcrypt dengan:
 
@@ -190,15 +186,26 @@ Generate hash bcrypt dengan:
 python3 -c "import bcrypt; print(bcrypt.hashpw(b'admin123', bcrypt.gensalt()).decode())"
 ```
 
-**Opsi C — Minta developer backend menambahkan endpoint bootstrap:**
+Single source of truth untuk arsitektur lengkap: [`MOBILE.md`](./MOBILE.md). Design tokens & konsistensi UI: [`DESIGN.md`](./DESIGN.md).
 
-Tambahkan endpoint `POST /auth/seed-admin` (publik, **hanya aktif jika tabel users kosong**) yang menerima JSON `{id, email, password, nama, role}` dan membuat user admin pertama. Setelah user pertama dibuat, endpoint ini harus otomatis disabled.
+---
 
-### Setelah User Tersedia / After Seeding
+## 📦 Build
 
-1. Set `API_KEY_ANDROID` dan `BASE_URL` di file `.env` (sudah ada).
-2. Jalankan `flutter run`.
-3. Login dengan kredensial yang baru di-seed.
+```bash
+flutter build apk \
+  --dart-define=BASE_URL=https://***REMOVED*** \
+  --dart-define=API_KEY_ANDROID=xxx \
+  --dart-define=MQTT_HOST=<host>.s1.eu.hivemq.cloud \
+  --dart-define=MQTT_PORT=8883 \
+  --dart-define=MQTT_USERNAME=***REMOVED*** \
+  --dart-define=MQTT_PASSWORD=xxx \
+  --dart-define=CCTV_BASE_URL=https://***REMOVED***
+
+flutter build appbundle --dart-define=BASE_URL=... # dst, sama
+```
+
+---
 
 ---
 
