@@ -1,0 +1,416 @@
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <PubSubClient.h>
+#include <Wire.h>
+#include "Adafruit_SHT31.h"
+
+const char* ssid          = "***REMOVED***";
+const char* password      = "***REMOVED***";
+
+const char* mqtt_server   = "***REMOVED***.s1.eu.hivemq.cloud";
+const int mqtt_port       = 8883;
+
+const char* mqtt_user     = "***REMOVED***";
+const char* mqtt_password = "***REMOVED***";
+
+const char* bardi_ip      = "***REMOVED***";
+const uint16_t bardi_port = 554;
+
+const char* server_host   = "***REMOVED***";
+const uint16_t server_port= 9000;
+
+WiFiClient clientBardi;
+WiFiClient clientServer;
+
+#define PIN_LAMP   25
+#define PIN_MIST   27
+#define PIN_MOTOR  26
+#define RELAY_ON   HIGH
+#define RELAY_OFF  LOW
+
+WiFiClientSecure espClient;
+PubSubClient client(espClient);
+Adafruit_SHT31 sht30 = Adafruit_SHT31();
+
+float temperature = 0.0;
+float humidity    = 0.0;
+bool sensorDetected = false;
+bool sensorValid    = false;
+
+float temp_thresh_on   = 37.5;
+float temp_thresh_off  = 38.0;
+
+float humid_thresh_low  = 40.0;
+float humid_thresh_high = 70.0;
+
+String lamp_mode = "AUTO";
+
+enum MistState { MIST_IDLE, MIST_RUNNING, MIST_COOLDOWN };
+MistState mistState = MIST_IDLE;
+unsigned long mistTimer = 0;
+const unsigned long MIST_RUN_DURATION     = 10000;
+const unsigned long MIST_STABILIZE_DELAY  = 5000;
+bool mistManualTrigger = false;
+
+enum MotorState { MOTOR_IDLE, MOTOR_RUNNING };
+MotorState motorState = MOTOR_IDLE;
+unsigned long motorTimer = 0;
+unsigned long lastMotorAutoRun = 0;
+const unsigned long MOTOR_RUN_DURATION   = 30000;
+const unsigned long MOTOR_AUTO_INTERVAL  = 4UL * 60UL * 60UL * 1000UL;
+
+bool motorManualTrigger = false;
+
+unsigned long last_publish_time = 0;
+const unsigned long PUBLISH_INTERVAL = 5000;
+unsigned long last_sensor_time = 0;
+const unsigned long SENSOR_INTERVAL = 2000;
+unsigned long last_reconnect_attempt = 0;
+
+// ---- Logging korelasi disconnect (permanen, throttled max 1 baris/5 dtk) ----
+const char* mqttStateName(int s) {
+  switch (s) {
+    case -4: return "TIMEOUT";
+    case -3: return "CONN_LOST";
+    case -2: return "CONNECT_FAILED";
+    case -1: return "DISCONNECTED";
+    case 0:  return "CONNECTED";
+    case 1:  return "BAD_PROTOCOL";
+    case 2:  return "BAD_CLIENT_ID";
+    case 3:  return "UNAVAILABLE";
+    case 4:  return "BAD_CREDENTIALS";
+    case 5:  return "UNAUTHORIZED";
+    default: return "UNKNOWN";
+  }
+}
+unsigned long lastDropLog = 0;
+int lastLoggedState = 999;
+void logMqttDrop(int st) {
+  unsigned long now = millis();
+  bool streaming = clientServer.connected() && clientBardi.connected();
+  if (st != lastLoggedState || now - lastDropLog >= 5000) {
+    lastLoggedState = st;
+    lastDropLog = now;
+    Serial.printf("[MQTT-DROP] t=%lu state=%d(%s) wifi=%d rssi=%d heap=%u streaming=%d\n",
+      now, st, mqttStateName(st), (int)WiFi.status(),
+      WiFi.status() == WL_CONNECTED ? WiFi.RSSI() : 0,
+      (unsigned)ESP.getFreeHeap(), streaming ? 1 : 0);
+  }
+}
+
+const char* topic_telemetry_temp   = "iot/telemetry/temperature";
+const char* topic_telemetry_humi   = "iot/telemetry/humidity";
+const char* topic_telemetry_lamp   = "iot/telemetry/status_lamp";
+const char* topic_telemetry_mist   = "iot/telemetry/status_mist";
+const char* topic_telemetry_motor  = "iot/telemetry/status_motor";
+const char* topic_telemetry_sensor = "iot/telemetry/status_sensor";
+
+const char* topic_cmd_thresh_on        = "iot/cmd/lamp_thresh_on";
+const char* topic_cmd_thresh_off       = "iot/cmd/lamp_thresh_off";
+const char* topic_cmd_humid_thresh_low  = "iot/cmd/humid_thresh_low";
+const char* topic_cmd_humid_thresh_high = "iot/cmd/humid_thresh_high";
+const char* topic_cmd_lamp_mode        = "iot/cmd/lamp_mode";
+const char* topic_cmd_mist_trig        = "iot/cmd/mist_trigger";
+const char* topic_cmd_motor_trig       = "iot/cmd/motor_trigger";
+
+void taskRtspBridge(void * pvParameters) {
+  uint8_t buffer[2048];
+
+  while (true) {
+    if (WiFi.status() == WL_CONNECTED) {
+      if (!clientServer.connected()) {
+        if (clientBardi.connected()) {
+          clientBardi.stop();
+          Serial.println("[RTSP] Sesi relay putus -> Kamera Bardi di-reset.");
+        }
+
+        Serial.println("[RTSP] Menghubungkan ke Relay Server ***REMOVED***:9000...");
+        if (clientServer.connect(server_host, server_port)) {
+          clientServer.setNoDelay(true);
+          Serial.println("[RTSP] -> Sukses terhubung ke Relay Server!");
+        } else {
+          vTaskDelay(2000 / portTICK_PERIOD_MS);
+          continue;
+        }
+      }
+
+      if (!clientBardi.connected()) {
+        Serial.println("[RTSP] Menghubungkan ke Kamera Bardi 554...");
+        if (clientBardi.connect(bardi_ip, bardi_port)) {
+          clientBardi.setNoDelay(true);
+          Serial.println("[RTSP] -> Sukses terhubung ke Kamera Bardi!");
+        } else {
+          Serial.println("[RTSP] Gagal terhubung ke Kamera Bardi, mencoba ulang...");
+          clientServer.stop();
+          vTaskDelay(2000 / portTICK_PERIOD_MS);
+          continue;
+        }
+      }
+
+      int serverPackets = 0;
+      while (clientServer.available() && clientBardi.connected() && serverPackets < 5) {
+        int bytesRead = clientServer.read(buffer, sizeof(buffer));
+        if (bytesRead > 0) {
+          clientBardi.write(buffer, bytesRead);
+          serverPackets++;
+        }
+      }
+
+      int bardiPackets = 0;
+      while (clientBardi.available() && clientServer.connected() && bardiPackets < 8) {
+        int bytesRead = clientBardi.read(buffer, sizeof(buffer));
+        if (bytesRead > 0) {
+          clientServer.write(buffer, bytesRead);
+          bardiPackets++;
+        }
+      }
+    }
+    vTaskDelay(5 / portTICK_PERIOD_MS);
+  }
+}
+
+void setup_wifi() {
+  delay(10);
+  Serial.println();
+  Serial.print("Menghubungkan ke ");
+  Serial.println(ssid);
+
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+  Serial.println("=========================================");
+  Serial.println(">>> Wi-Fi TERHUBUNG SUCCESSFULLY! <<<");
+  Serial.print("IP Address ESP32: ");
+  Serial.println(WiFi.localIP());
+  Serial.println("=========================================");
+}
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  String message = "";
+  for (unsigned int i = 0; i < length; i++) {
+    message += (char)payload[i];
+  }
+
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("]: ");
+  Serial.println(message);
+
+  if (String(topic) == topic_cmd_thresh_on) {
+    temp_thresh_on = message.toFloat();
+  }
+  else if (String(topic) == topic_cmd_thresh_off) {
+    temp_thresh_off = message.toFloat();
+  }
+  else if (String(topic) == topic_cmd_humid_thresh_low) {
+    humid_thresh_low = message.toFloat();
+  }
+  else if (String(topic) == topic_cmd_humid_thresh_high) {
+    humid_thresh_high = message.toFloat();
+  }
+  else if (String(topic) == topic_cmd_lamp_mode) {
+    if (message == "ON")         lamp_mode = "MANUAL_ON";
+    else if (message == "OFF")   lamp_mode = "MANUAL_OFF";
+    else                         lamp_mode = "AUTO";
+  }
+  else if (String(topic) == topic_cmd_mist_trig && message == "TRIGGER") {
+    if (mistState == MIST_IDLE || mistState == MIST_COOLDOWN) {
+      mistManualTrigger = true;
+    }
+  }
+  else if (String(topic) == topic_cmd_motor_trig && message == "TRIGGER") {
+    if (motorState == MOTOR_IDLE) {
+      motorManualTrigger = true;
+    }
+  }
+}
+
+bool reconnect() {
+  Serial.print("Menghubungkan ke HiveMQ Cloud...");
+  String clientId = "ESP32Client-";
+  clientId += String(random(0, 0xffff), HEX);
+
+  if (client.connect(clientId.c_str(), mqtt_user, mqtt_password)) {
+    Serial.println("TERHUBUNG");
+    client.subscribe(topic_cmd_thresh_on);
+    client.subscribe(topic_cmd_thresh_off);
+    client.subscribe(topic_cmd_humid_thresh_low);
+    client.subscribe(topic_cmd_humid_thresh_high);
+    client.subscribe(topic_cmd_lamp_mode);
+    client.subscribe(topic_cmd_mist_trig);
+    client.subscribe(topic_cmd_motor_trig);
+    return true;
+  } else {
+    logMqttDrop(client.state());
+    Serial.println(" coba lagi 5 detik");
+    return false;
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(PIN_LAMP, OUTPUT);
+  pinMode(PIN_MIST, OUTPUT);
+  pinMode(PIN_MOTOR, OUTPUT);
+
+  digitalWrite(PIN_LAMP, RELAY_OFF);
+  digitalWrite(PIN_MIST, RELAY_OFF);
+  digitalWrite(PIN_MOTOR, RELAY_OFF);
+
+  Wire.begin(21, 22);
+  sensorDetected = sht30.begin(0x44);
+  if (!sensorDetected) {
+    Serial.println("[PERINGATAN] SHT30 tidak terdeteksi!");
+  }
+
+  setup_wifi();
+  espClient.setInsecure();
+  client.setServer(mqtt_server, mqtt_port);
+  client.setCallback(callback);
+  client.setKeepAlive(60);
+  client.setSocketTimeout(10);
+  randomSeed(esp_random());
+
+  lastMotorAutoRun = millis();
+
+  xTaskCreatePinnedToCore(
+    taskRtspBridge,
+    "RTSP_Bridge",
+    8192,
+    NULL,
+    0,
+    NULL,
+    1
+  );
+}
+
+void loop() {
+  unsigned long currentMillis = millis();
+  static bool wasConnected = false;
+
+  if (!client.connected()) {
+    if (wasConnected) {
+      logMqttDrop(client.state());
+      wasConnected = false;
+    }
+    if (currentMillis - last_reconnect_attempt >= 5000) {
+      last_reconnect_attempt = currentMillis;
+      if (reconnect()) {
+        last_reconnect_attempt = 0;
+        wasConnected = true;
+      }
+    }
+  } else {
+    wasConnected = true;
+    client.loop();
+  }
+
+  if (currentMillis - last_sensor_time >= SENSOR_INTERVAL) {
+    last_sensor_time = currentMillis;
+    if (sensorDetected) {
+      float t = sht30.readTemperature();
+      float h = sht30.readHumidity();
+      if (!isnan(t) && !isnan(h)) {
+        temperature = t;
+        humidity = h;
+        sensorValid = true;
+      } else {
+        sensorValid = false;
+      }
+    }
+  }
+
+  if (lamp_mode == "AUTO") {
+    if (sensorValid) {
+      if (temperature <= temp_thresh_on) {
+        digitalWrite(PIN_LAMP, RELAY_ON);
+      } else if (temperature >= temp_thresh_off) {
+        digitalWrite(PIN_LAMP, RELAY_OFF);
+      }
+    }
+  } else if (lamp_mode == "MANUAL_ON") {
+    digitalWrite(PIN_LAMP, RELAY_ON);
+  } else if (lamp_mode == "MANUAL_OFF") {
+    digitalWrite(PIN_LAMP, RELAY_OFF);
+  }
+
+  switch (mistState) {
+    case MIST_IDLE:
+      if (mistManualTrigger) {
+        mistManualTrigger = false;
+        mistState = MIST_RUNNING;
+        mistTimer = currentMillis;
+        digitalWrite(PIN_MIST, RELAY_ON);
+        Serial.println("[MIST] Dipicu manual dari website.");
+      }
+      else if (sensorValid && humidity < humid_thresh_low) {
+        mistState = MIST_RUNNING;
+        mistTimer = currentMillis;
+        digitalWrite(PIN_MIST, RELAY_ON);
+        Serial.println("[MIST] Kelembaban di bawah ambang bawah -> ON otomatis.");
+      }
+      break;
+    case MIST_RUNNING:
+      if (currentMillis - mistTimer >= MIST_RUN_DURATION) {
+        digitalWrite(PIN_MIST, RELAY_OFF);
+        mistState = MIST_COOLDOWN;
+        mistTimer = currentMillis;
+      }
+      break;
+    case MIST_COOLDOWN:
+      if (mistManualTrigger) {
+        mistManualTrigger = false;
+        mistState = MIST_RUNNING;
+        mistTimer = currentMillis;
+        digitalWrite(PIN_MIST, RELAY_ON);
+        Serial.println("[MIST] Dipicu manual dari website (saat cooldown).");
+      }
+      else if (currentMillis - mistTimer >= MIST_STABILIZE_DELAY) {
+        mistState = MIST_IDLE; // kembali ke IDLE, akan otomatis dicek ulang di iterasi berikutnya
+      }
+      break;
+  }
+
+  switch (motorState) {
+    case MOTOR_IDLE:
+      if (motorManualTrigger) {
+        motorManualTrigger = false;
+        motorState = MOTOR_RUNNING;
+        motorTimer = currentMillis;
+        digitalWrite(PIN_MOTOR, RELAY_ON);
+        Serial.println("[MOTOR] Dipicu manual dari website.");
+      }
+      else if (currentMillis - lastMotorAutoRun >= MOTOR_AUTO_INTERVAL) {
+        lastMotorAutoRun = currentMillis;
+        motorState = MOTOR_RUNNING;
+        motorTimer = currentMillis;
+        digitalWrite(PIN_MOTOR, RELAY_ON);
+        Serial.println("[MOTOR] Jadwal otomatis (tiap 4 jam) berjalan.");
+      }
+      break;
+    case MOTOR_RUNNING:
+      if (currentMillis - motorTimer >= MOTOR_RUN_DURATION) {
+        digitalWrite(PIN_MOTOR, RELAY_OFF);
+        motorState = MOTOR_IDLE;
+      }
+      break;
+  }
+
+  if (client.connected() && (currentMillis - last_publish_time >= PUBLISH_INTERVAL)) {
+    last_publish_time = currentMillis;
+    if (sensorValid) {
+      client.publish(topic_telemetry_temp, String(temperature, 1).c_str());
+      client.publish(topic_telemetry_humi, String(humidity, 1).c_str());
+    }
+    client.publish(topic_telemetry_sensor, sensorValid ? "OK" : "ERROR");
+    client.publish(topic_telemetry_lamp, (digitalRead(PIN_LAMP) == RELAY_ON) ? "ON" : "OFF");
+    client.publish(topic_telemetry_mist, (digitalRead(PIN_MIST) == RELAY_ON) ? "ON" : "OFF");
+    client.publish(topic_telemetry_motor, (digitalRead(PIN_MOTOR) == RELAY_ON) ? "ON" : "OFF");
+  }
+}
