@@ -290,10 +290,10 @@ class MqttNotifier extends StateNotifier<MqttState>
       try {
         host = Uri.parse(nativeUrl ?? wsUrl).host;
       } catch (_) {
-        host = nativeUrl ?? wsUrl;
+        host = 'configured-host';
       }
-      debugPrint(
-          '[MQTT] kredensial dari $credSource sebagai ${username ?? '-'}@$host (pwdLen=${password?.length ?? 0})');
+      // Jangan log username/panjang password — cukup sumber + host.
+      debugPrint('[MQTT] kredensial dari $credSource ($host)');
     }
 
     _service.onMessage = _handleMessage;
@@ -344,15 +344,14 @@ class MqttNotifier extends StateNotifier<MqttState>
     try {
       for (final cand in candidates) {
         if (_disposed) return;
-        // Bukti kredensial efektif (tanpa password): bedakan build basi vs broker.
+        // Bukti koneksi efektif tanpa identitas: hanya transport + host.
         String host;
         try {
           host = Uri.parse(cand.key).host;
         } catch (_) {
-          host = cand.key;
+          host = 'configured-host';
         }
-        debugPrint(
-            '[MQTT] mencoba ${cand.value} sebagai ${username ?? '-'}@$host ...');
+        debugPrint('[MQTT] mencoba ${cand.value} ($host) ...');
         final ok = await _service.connect(
           url: cand.key,
           username: username,
@@ -374,7 +373,7 @@ class MqttNotifier extends StateNotifier<MqttState>
           state = state.copyWith(
             status: 'error',
             lastError:
-                'auth gagal (${_service.lastReturnCode}) — cek username/password HiveMQ di .env (MQTT_PASSWORD)',
+                'auth gagal (${_service.lastReturnCode}) — cek username/password MQTT di pengaturan',
             authFailed: true,
             reconnectCount: _service.reconnectCount,
           );

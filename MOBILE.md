@@ -844,13 +844,13 @@ class RoleGuard extends ConsumerWidget {
 
 | Key | Contoh | Wajib | Keterangan |
 |---|---|---|---|
-| `BASE_URL` | `https://abdulrosyid.my.id` | Ya | Base REST API FastAPI (tanpa trailing `/api`) |
+| `BASE_URL` | `https://api-contoh.my.id` | Ya | Base REST API FastAPI (tanpa trailing `/api`) |
 | `API_KEY_ANDROID` | `xxx` | Ya | Header `X-API-Key` tiap request; `401` bila salah/tidak dikirim |
-| `MQTT_HOST` | `9170ac9...s1.eu.hivemq.cloud` | Ya | Host saja (tanpa skema) agar app bisa pilih koneksi native |
+| `MQTT_HOST` | `<host-hivemq-Anda>` | Ya | Host saja (tanpa skema) agar app bisa pilih koneksi native |
 | `MQTT_PORT` | `8883` | Ya | `8883` = MQTTS native; jangan pakai `8884` (itu WebSocket khusus web) |
-| `MQTT_USERNAME` | `endoqmerak` | Ya | Sama dengan kredensial server |
+| `MQTT_USERNAME` | `<user-mqtt-Anda>` | Ya | Sama dengan kredensial server |
 | `MQTT_PASSWORD` | `***` | Ya | Bisa di-refresh dinamis dari `GET /api/incubator/settings` |
-| `CCTV_BASE_URL` | `https://abdulrosyid.my.id` | Ya | Biasanya = `BASE_URL`; dipisah agar mode dev bisa ke `http://<IP>:5000` langsung |
+| `CCTV_BASE_URL` | `https://contoh.my.id` | Ya | Biasanya = `BASE_URL`; dipisah agar mode dev bisa ke `http://<IP>:5000` langsung |
 | `CCTV_INKUBATOR_PATH` | `/video_feed` | Tidak | Default sesuai `nginx.conf` |
 | `CCTV_KANDANG_PATH` | `/kandang_feed` | Tidak | Default sesuai `nginx.conf` |
 | `CCTV_HEALTH_PATH` | `/cctv_health` | Tidak | Health-check stream |
@@ -861,13 +861,13 @@ class RoleGuard extends ConsumerWidget {
 
 ```bash
 flutter build apk \
-  --dart-define=BASE_URL=https://abdulrosyid.my.id \
+  --dart-define=BASE_URL=https://api-contoh.my.id \
   --dart-define=API_KEY_ANDROID=xxx \
-  --dart-define=MQTT_HOST=9170ac9caae04bc598c6d6111adfa4a1.s1.eu.hivemq.cloud \
+  --dart-define=MQTT_HOST=<host-hivemq-Anda> \
   --dart-define=MQTT_PORT=8883 \
-  --dart-define=MQTT_USERNAME=endoqmerak \
+  --dart-define=MQTT_USERNAME=<user-mqtt-Anda> \
   --dart-define=MQTT_PASSWORD=xxx \
-  --dart-define=CCTV_BASE_URL=https://abdulrosyid.my.id
+  --dart-define=CCTV_BASE_URL=https://contoh.my.id
 
 flutter build appbundle --dart-define=BASE_URL=... (dst, sama)
 ```

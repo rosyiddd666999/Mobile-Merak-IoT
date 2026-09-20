@@ -3,21 +3,25 @@
 #include <PubSubClient.h>
 #include <Wire.h>
 #include "Adafruit_SHT31.h"
+#include "secrets.h"
 
-const char* ssid          = "Pribadi";
-const char* password      = "pribadi1";
+// Kredensial WiFi/MQTT/relay dimuat dari secrets.h (di-ignore git).
+// Lihat secrets.h.example. Nilai lama yang pernah ter-commit
+// harus dirotasi dan dianggap bocor.
+const char* ssid          = WIFI_SSID;
+const char* password      = WIFI_PASSWORD;
 
-const char* mqtt_server   = "9170ac9caae04bc598c6d6111adfa4a1.s1.eu.hivemq.cloud";
-const int mqtt_port       = 8883;
+const char* mqtt_server   = MQTT_SERVER;
+const int mqtt_port       = MQTT_PORT;
 
-const char* mqtt_user     = "endoqmerak";
-const char* mqtt_password = "Admin123";
+const char* mqtt_user     = MQTT_USER;
+const char* mqtt_password = MQTT_PASSWORD;
 
-const char* bardi_ip      = "192.168.110.227";
-const uint16_t bardi_port = 554;
+const char* bardi_ip      = BARDI_IP;
+const uint16_t bardi_port = BARDI_PORT;
 
-const char* server_host   = "76.76.76.188";
-const uint16_t server_port= 9000;
+const char* server_host   = SERVER_HOST;
+const uint16_t server_port= SERVER_PORT;
 
 WiFiClient clientBardi;
 WiFiClient clientServer;
@@ -124,7 +128,7 @@ void taskRtspBridge(void * pvParameters) {
           Serial.println("[RTSP] Sesi relay putus -> Kamera Bardi di-reset.");
         }
 
-        Serial.println("[RTSP] Menghubungkan ke Relay Server 76.76.76.188:9000...");
+        Serial.println("[RTSP] Menghubungkan ke Relay Server...");
         if (clientServer.connect(server_host, server_port)) {
           clientServer.setNoDelay(true);
           Serial.println("[RTSP] -> Sukses terhubung ke Relay Server!");
@@ -135,7 +139,7 @@ void taskRtspBridge(void * pvParameters) {
       }
 
       if (!clientBardi.connected()) {
-        Serial.println("[RTSP] Menghubungkan ke Kamera Bardi 554...");
+        Serial.println("[RTSP] Menghubungkan ke Kamera Bardi...");
         if (clientBardi.connect(bardi_ip, bardi_port)) {
           clientBardi.setNoDelay(true);
           Serial.println("[RTSP] -> Sukses terhubung ke Kamera Bardi!");

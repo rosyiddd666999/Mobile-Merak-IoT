@@ -7,7 +7,13 @@ import 'core/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load();
+  // .env opsional (dev lokal saja, tidak dibundle di release).
+  // Konfigurasi utama via --dart-define; kegagalan load diabaikan.
+  try {
+    await dotenv.load();
+  } catch (_) {
+    // Abaikan: AppConstants akan fallback ke AppConfig (dart-define).
+  }
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   runApp(const ProviderScope(child: MerakApp()));

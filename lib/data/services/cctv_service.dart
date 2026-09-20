@@ -7,6 +7,39 @@ class CctvService {
   CctvService(this._dio);
   final Dio _dio;
 
+  /// Host custom hanya boleh HTTPS dan tanpa userinfo/path aneh.
+  /// Mengembalikan null bila tidak valid — caller wajib menolak dan
+  /// TIDAK mengirim header auth ke host tersebut.
+  static String? sanitizeCustomBase(String? input) {
+    final v = input?.trim().replaceAll(RegExp(r'/+$'), '') ?? '';
+    if (v.isEmpty) return null;
+    final uri = Uri.tryParse(v);
+    if (uri == null || !uri.hasScheme || !uri.hasAuthority) return null;
+    if (uri.scheme.toLowerCase() != 'https') return null;
+    if (uri.userInfo.isNotEmpty) return null;
+    if (uri.hasQuery || uri.hasFragment) return null;
+    // Tolak IP privat/loopback yang diketik manual agar tidak jadi SSRF lokal.
+    final host = uri.host.toLowerCase();
+    if (host == 'localhost' ||
+        host.startsWith('127.') ||
+        host.startsWith('10.') ||
+        host.startsWith('192.168.') ||
+        host.startsWith('172.') ||
+        host == '::1' ||
+        host == '[::1]') {
+      return null;
+    }
+    return v;
+  }
+
+  /// True bila feed mengarah ke host di luar base resmi — UI wajib tampilkan
+  /// peringatan sebelum mengirim X-API-Key/Bearer ke sana.
+  static bool isExternalHost(Uri feed, String trustedBase) {
+    final trusted = Uri.tryParse(trustedBase)?.host.toLowerCase() ?? '';
+    if (trusted.isEmpty) return true;
+    return feed.host.toLowerCase() != trusted;
+  }
+
   Uri incubatorFeed({int? cacheBuster, String? baseOverride}) =>
       _feed(AppConstants.cctvInkubatorPath, cacheBuster, baseOverride);
   Uri kandangFeed({int? cacheBuster, String? baseOverride}) =>

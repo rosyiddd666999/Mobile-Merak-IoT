@@ -8,7 +8,18 @@ class AppConstants {
     if (env.isNotEmpty) return env;
     return AppConfig.baseUrl;
   }
-  static String get apiKeyAndroid => dotenv.get('API_KEY_ANDROID', fallback: 'dev-api-key-android');
+
+  /// Kosong bila tidak dikonfigurasi — caller wajib menolak request auth
+  /// daripada memakai fallback lemah bawaan.
+  static String get apiKeyAndroid {
+    final env = dotenv.get('API_KEY_ANDROID', fallback: '');
+    if (env.isNotEmpty) return env;
+    return AppConfig.apiKeyAndroid;
+  }
+
+  /// True bila konfigurasi penting belum diisi (tampilkan layar perbaiki key).
+  static bool get isConfigured =>
+      baseUrl.isNotEmpty && apiKeyAndroid.isNotEmpty;
 
   // Base origin untuk CCTV (Nginx HTTPS). Isi CCTV_BASE_URL bila beda host.
   static String get cctvBaseUrl {
