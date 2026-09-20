@@ -70,13 +70,24 @@ class CctvNotifier extends StateNotifier<CctvState> {
       await storage.delete(key: _kCctvCustomKey);
       final savedBase = await storage.read(key: _kCctvBaseKey);
       if (savedBase != null && savedBase.trim().isNotEmpty) {
+        // Tolak nilai lama yang tidak lolos aturan https-only.
+        if (CctvService.sanitizeCustomBase(savedBase) == null) {
+          await storage.delete(key: _kCctvBaseKey);
+          return;
+        }
         state = state.copyWith(customBase: savedBase.trim());
       }
     } catch (_) {}
   }
 
-  Future<void> saveBase(String base) async {
+  /// Simpan override host CCTV. Hanya terima HTTPS valid (lihat
+  /// [CctvService.sanitizeCustomBase]); nilai http/IP lokal ditolak agar
+  /// token tidak exfil ke host arbitrari. Return false bila ditolak.
+  Future<bool> saveBase(String base) async {
     final v = base.trim().replaceAll(RegExp(r'/+$'), '');
+    if (v.isNotEmpty && CctvService.sanitizeCustomBase(v) == null) {
+      return false;
+    }
     try {
       if (v.isEmpty) {
         await _ref.read(secureStorageProvider).delete(key: _kCctvBaseKey);
@@ -91,6 +102,7 @@ class CctvNotifier extends StateNotifier<CctvState> {
       cacheBuster: DateTime.now().millisecondsSinceEpoch,
     );
     pollHealth();
+    return true;
   }
 
   void select(CctvFeed feed) {

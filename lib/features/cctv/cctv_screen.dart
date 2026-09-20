@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../data/providers/api_client_provider.dart';
 import '../../data/providers/cctv_provider.dart';
@@ -66,6 +67,11 @@ class _CctvScreenState extends ConsumerState<CctvScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
+              'Hanya HTTPS publik. Token TIDAK dikirim ke host custom yang belum terverifikasi.',
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 4),
+            const Text(
               'Target kamera diatur di env gateway server, bukan dari app.',
               style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
@@ -74,8 +80,17 @@ class _CctvScreenState extends ConsumerState<CctvScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Batal')),
           ElevatedButton(
-            onPressed: () {
-              ref.read(cctvProvider.notifier).saveBase(_baseController.text);
+            onPressed: () async {
+              final ok = await ref.read(cctvProvider.notifier).saveBase(_baseController.text);
+              if (!ctx.mounted) return;
+              if (!ok) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(
+                    content: Text('Host ditolak: wajib https:// publik, tanpa IP lokal/query.'),
+                  ),
+                );
+                return;
+              }
               setState(() => _streamFailed = false);
               Navigator.of(ctx).pop();
             },
@@ -103,11 +118,16 @@ class _CctvScreenState extends ConsumerState<CctvScreen> {
     final showError = _streamFailed;
 
     // Header auth untuk MJPEG (MOBILE.md §6.19.6).
+    // Jangan kirim kredensial ke host custom eksternal yang belum terverifikasi.
     final apiKey = ref.watch(apiKeyProvider);
     final jwt = ref.watch(jwtTokenProvider);
     final headers = <String, String>{};
-    if (apiKey != null && apiKey.isNotEmpty) headers['X-API-Key'] = apiKey;
-    if (jwt != null && jwt.isNotEmpty) headers['Authorization'] = 'Bearer $jwt';
+    final trustedBase = AppConstants.cctvBaseUrl;
+    final isExternal = CctvService.isExternalHost(feedUri, trustedBase);
+    if (!isExternal) {
+      if (apiKey != null && apiKey.isNotEmpty) headers['X-API-Key'] = apiKey;
+      if (jwt != null && jwt.isNotEmpty) headers['Authorization'] = 'Bearer $jwt';
+    }
 
     return Scaffold(
       appBar: DetailAppBar(
@@ -163,6 +183,22 @@ class _CctvScreenState extends ConsumerState<CctvScreen> {
                     child: Text(
                       cctv.lastStatusCode != null ? '${cctv.error} (${cctv.lastStatusCode})' : cctv.error!,
                       style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (isExternal)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.shield_outlined, size: 14, color: AppColors.warning),
+                  SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Host custom terdeteksi — mode tanpa token (auth tidak dikirim).',
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                     ),
                   ),
                 ],

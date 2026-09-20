@@ -78,7 +78,6 @@ void _logDioError(DioException err) {
   }
 
   final type = err.type.name;
-  final responseBody = err.response?.data;
   final message = err.message ?? '-';
 
   final safeHeaders = <String, dynamic>{};
@@ -97,6 +96,6 @@ void _logDioError(DioException err) {
   debugPrint('║ TYPE     : $type');
   debugPrint('║ MESSAGE  : $message');
   debugPrint('║ HEADERS  : $safeHeaders');
-  debugPrint('║ RESPONSE : $responseBody');
+  // Sengaja tidak log response body: bisa memuat PII/token.
   debugPrint('╚═════════════════════════════════════════════════════');
 }

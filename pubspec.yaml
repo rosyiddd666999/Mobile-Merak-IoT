@@ -60,7 +60,8 @@ flutter:
   uses-material-design: true
 
   assets:
-    - .env
+    # .env TIDAK dibundle agar secret dev tidak ikut ke APK/IPA release.
+    # Dev lokal: pasang file .env di root lalu `flutter run` biasa.
     - assets/images/logo-nb.png
     - assets/images/logo.png
 
