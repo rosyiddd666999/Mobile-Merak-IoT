@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/alert_margins.dart';
 import '../../../core/theme.dart';
 import '../../../data/models/incubator_settings.dart';
 import '../../../data/models/incubator_status.dart';
@@ -73,10 +74,11 @@ class _StatusContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = _approxSettings(status);
-    final suhuNormal = status.suhuSekarang >= settings.suhuMin &&
-        status.suhuSekarang <= settings.suhuMax;
-    final lembapNormal = status.kelembapanSekarang >= settings.kelembapanMin &&
-        status.kelembapanSekarang <= settings.kelembapanMax;
+    // Zona toleransi: di dalam margin dianggap normal (anti-kedip di batas).
+    final suhuNormal = status.suhuSekarang >= settings.suhuMin - AlertMargins.suhu &&
+        status.suhuSekarang <= settings.suhuMax + AlertMargins.suhu;
+    final lembapNormal = status.kelembapanSekarang >= settings.kelembapanMin - AlertMargins.kelembapan &&
+        status.kelembapanSekarang <= settings.kelembapanMax + AlertMargins.kelembapan;
     final statusColor =
         (suhuNormal && lembapNormal) ? AppColors.success : AppColors.critical;
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../core/alert_margins.dart';
 import '../models/alert.dart';
 import '../models/incubator_status.dart';
 import '../models/incubator_settings.dart';
@@ -158,7 +159,8 @@ class Demo extends _$Demo {
     }
 
     final newAlerts = List<Alert>.from(state.alerts);
-    if (spikedSuhu > settings.suhuMax) {
+    // Zona toleransi: alert hanya bila MELAMPAUI margin (konsisten dgn backend).
+    if (spikedSuhu > settings.suhuMax + AlertMargins.suhu) {
       newAlerts.insert(
         0,
         Alert(
@@ -171,7 +173,7 @@ class Demo extends _$Demo {
           createdAt: now,
         ),
       );
-    } else if (spikedSuhu < settings.suhuMin) {
+    } else if (spikedSuhu < settings.suhuMin - AlertMargins.suhu) {
       newAlerts.insert(
         0,
         Alert(
@@ -185,7 +187,7 @@ class Demo extends _$Demo {
         ),
       );
     }
-    if (spikedHum > settings.kelembapanMax) {
+    if (spikedHum > settings.kelembapanMax + AlertMargins.kelembapan) {
       newAlerts.insert(
         0,
         Alert(
@@ -198,7 +200,7 @@ class Demo extends _$Demo {
           createdAt: now,
         ),
       );
-    } else if (spikedHum < settings.kelembapanMin) {
+    } else if (spikedHum < settings.kelembapanMin - AlertMargins.kelembapan) {
       newAlerts.insert(
         0,
         Alert(
