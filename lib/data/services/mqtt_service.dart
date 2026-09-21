@@ -157,9 +157,14 @@ class MqttService {
       if (useWs) {
         client.useWebSocket = true;
         client.websocketProtocols = const ['mqtt'];
+        // PENTING: jangan set client.secure untuk wss — mqtt_client mematikan
+        // useWebSocket bila secure=true (jatuh ke raw TLS TCP dengan string
+        // URL utuh sebagai host -> `Failed host lookup: 'wss://...'`). TLS
+        // sudah inheren dari skema wss di koneksi websocket.
       }
       // Sertifikat HiveMQ Cloud valid publik — tanpa bypass verifikasi.
-      if (secure) {
+      // Hanya untuk native mqtts (TCP). Jalur websocket tidak pakai flag ini.
+      if (secure && !useWs) {
         client.secure = true;
       }
 

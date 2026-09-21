@@ -51,13 +51,18 @@ class CctvService {
     final rawBase = (baseOverride?.trim().isNotEmpty == true) ? baseOverride!.trim() : AppConstants.cctvBaseUrl;
     final base = rawBase.replaceAll(RegExp(r'/+$'), '');
     var uri = Uri.parse('$base$path');
-    // Gateway MEWAJIBKAN query ?url=<rtsp> (kontrak website).
-    // Hanya kirim ke host resmi (== CCTV_BASE_URL), bukan ke custom override —
-    // password kamera tidak boleh exfil ke host arbitrari.
+    // Satu-key fleksibel (cukup salah satu terisi):
+    // 1. Base SUDAH bawa ?url= (full link ala website ditempel ke
+    //    CCTV_BASE_URL) -> pakai apa adanya.
+    // 2. CCTV_RTSP_URL terisi -> tempel sebagai ?url=, HANYA ke host resmi
+    //    (== CCTV_BASE_URL), bukan custom override (password kamera tidak
+    //    boleh exfil ke host arbitrari).
+    // 3. Keduanya kosong -> polos tanpa ?url= (andalkan default gateway).
     final trustedHost = Uri.tryParse(AppConstants.cctvBaseUrl)?.host.toLowerCase() ?? '';
     final target = rtspTarget?.trim() ?? '';
     final qp = <String, String>{...uri.queryParameters};
-    if (target.isNotEmpty &&
+    if (!qp.containsKey('url') &&
+        target.isNotEmpty &&
         trustedHost.isNotEmpty &&
         uri.host.toLowerCase() == trustedHost) {
       qp['url'] = target;

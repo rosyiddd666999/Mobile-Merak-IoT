@@ -43,14 +43,15 @@ class AppConstants {
   static String get cctvKandangUrl => '$cctvBaseUrl$cctvKandangPath';
   static String get cctvHealthUrl => '$cctvBaseUrl$cctvHealthPath';
 
-  // MQTT native (mqtts host:8883, MOBILE.md §12) — .env dulu, fallback dart-define.
-  // Disanitasi: bila terisi full URL (wss://host/mqtt), ambil host-nya saja
-  // agar mqttNativeUrl tak jadi sampah `mqtts://wss://...` (pernah sebabkan
-  // infinite `Failed host lookup`).
+  // MQTT: MQTT_URL sumber tunggal (wajib). MQTT_HOST/PORT opsional legacy —
+  // bila kosong, host diturunkan dari MQTT_URL (HiveMQ: host sama untuk
+  // native 8883 maupun websocket 8884). Disanitasi anti full-URL nyasar.
   static String get mqttHost {
     final raw = envOr('MQTT_HOST', fallback: '');
     final sanitized = _bareHost(raw);
     if (sanitized.isNotEmpty) return sanitized;
+    final fromUrl = _bareHost(mqttUrl);
+    if (fromUrl.isNotEmpty) return fromUrl;
     return _bareHost(AppConfig.mqttHost);
   }
 
