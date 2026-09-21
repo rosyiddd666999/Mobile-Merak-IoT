@@ -2,39 +2,45 @@ import 'package:flutter/material.dart';
 
 /// Logo mitra kerjasama — dipakai di splash, login, dan header menu utama.
 /// Sekali buat, parameter dinamis via [size].
+/// [wide]: mode header — logo kotak tetap [size]×[size], logo Pertamina
+/// yang memanjang menyesuaikan lebar ([size]×2.8) dengan fit contain.
 class PartnerLogos extends StatelessWidget {
   final double size;
   final bool showLabel;
+  final bool wide;
 
-  const PartnerLogos({super.key, this.size = 40, this.showLabel = false});
+  const PartnerLogos(
+      {super.key, this.size = 40, this.showLabel = false, this.wide = false});
 
-  static const _assets = [
-    'assets/images/logo-kel-merak.jpeg',
-    'assets/images/logo-pertamina.jpeg',
-  ];
+  static const _squareLogo = 'assets/images/logo-kel-merak.jpeg';
+  static const _wideLogo = 'assets/images/logo-pertamina.jpeg';
+
+  Widget _box(String asset, {required double width, required double height}) {
+    return Container(
+      width: width,
+      height: height,
+      padding: EdgeInsets.all(size * 0.07),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(size * 0.25),
+        border: Border.all(color: const Color(0xFFE6ECEA)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(size * 0.18),
+        child: Image.asset(asset, fit: BoxFit.contain),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final row = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        for (var i = 0; i < _assets.length; i++) ...[
-          if (i > 0) SizedBox(width: size * 0.22),
-          Container(
-            width: size,
-            height: size,
-            padding: EdgeInsets.all(size * 0.07),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(size * 0.25),
-              border: Border.all(color: const Color(0xFFE6ECEA)),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(size * 0.18),
-              child: Image.asset(_assets[i], fit: BoxFit.cover),
-            ),
-          ),
-        ],
+        _box(_squareLogo, width: size, height: size),
+        SizedBox(width: size * 0.22),
+        _box(_wideLogo,
+            width: wide ? size * 2.8 : size, height: size),
       ],
     );
     if (!showLabel) return row;

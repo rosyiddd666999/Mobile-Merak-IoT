@@ -6,6 +6,7 @@ import '../../core/theme.dart';
 import '../../data/models/auth_response.dart';
 import '../../data/providers/api_client_provider.dart';
 import '../../data/providers/auth_provider.dart';
+import '../../shared/partner_logos.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -111,23 +112,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _timer?.cancel();
     _anim.dispose();
     super.dispose();
-  }
-
-  /// Logo mitra dibungkus putih (JPEG tak transparan).
-  Widget _partnerLogo(String asset) {
-    return Container(
-      width: 56,
-      height: 56,
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: Image.asset(asset, fit: BoxFit.cover),
-      ),
-    );
   }
 
   @override
@@ -244,14 +228,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _partnerLogo('assets/images/logo-kel-merak.jpeg'),
-                        const SizedBox(width: 12),
-                        _partnerLogo('assets/images/logo-pertamina.jpeg'),
-                      ],
-                    ),
+                    const PartnerLogos(size: 56, wide: true),
                   ],
                 ),
               ),
