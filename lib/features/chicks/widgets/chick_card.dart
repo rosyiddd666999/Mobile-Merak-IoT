@@ -4,6 +4,7 @@ import '../../../core/theme.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../data/models/chick.dart';
 import '../../../shared/app_card.dart';
+import '../../../shared/app_photo.dart';
 import '../../../shared/design_kit.dart';
 
 class ChickCard extends StatelessWidget {
@@ -17,10 +18,10 @@ class ChickCard extends StatelessWidget {
     final status = StatusMapper.chick(chick.status);
     return AppRowCard(
       onTap: onTap,
-      leading: const AppLeadingBox(
+      leading: AppPhotoBox(
         size: 48,
-        color: AppColors.tertiary,
-        child: Icon(Icons.cruelty_free, color: AppColors.tertiary, size: 24),
+        url: chick.fotoUrl,
+        fallback: const Icon(Icons.cruelty_free, color: AppColors.tertiary, size: 24),
       ),
       title: chick.id,
       subtitle:

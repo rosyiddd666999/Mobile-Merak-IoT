@@ -3,6 +3,7 @@ class User {
   final String email;
   final String nama;
   final String role;
+  final String? fotoUrl;
   final DateTime? createdAt;
 
   User({
@@ -10,6 +11,7 @@ class User {
     required this.email,
     required this.nama,
     required this.role,
+    this.fotoUrl,
     this.createdAt,
   });
 
@@ -26,6 +28,7 @@ class User {
       email: (json['email'] ?? '') as String,
       nama: ((json['nama'] ?? json['name'] ?? '') as String),
       role: role,
+      fotoUrl: (json['image_url'] ?? json['foto_url']) as String?,
       createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'] as String) : null,
     );
   }
@@ -35,6 +38,7 @@ class User {
     'email': email,
     'nama': nama,
     'role': role,
+    'image_url': fotoUrl,
     'created_at': createdAt?.toIso8601String(),
   };
 
@@ -43,12 +47,14 @@ class User {
     String? email,
     String? nama,
     String? role,
+    String? fotoUrl,
     DateTime? createdAt,
   }) => User(
     id: id ?? this.id,
     email: email ?? this.email,
     nama: nama ?? this.nama,
     role: role ?? this.role,
+    fotoUrl: fotoUrl ?? this.fotoUrl,
     createdAt: createdAt ?? this.createdAt,
   );
 }

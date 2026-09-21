@@ -26,6 +26,7 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _suffixController = TextEditingController();
   final _namaController = TextEditingController();
+  final _fotoController = TextEditingController();
   final _generasiController = TextEditingController(text: 'F0');
   final _varianWarnaController = TextEditingController();
 
@@ -42,6 +43,7 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
   void dispose() {
     _suffixController.dispose();
     _namaController.dispose();
+    _fotoController.dispose();
     _generasiController.dispose();
     _varianWarnaController.dispose();
     super.dispose();
@@ -60,6 +62,7 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
     if (_initialized) return;
     _initialized = true;
     _namaController.text = b.nama ?? '';
+    _fotoController.text = b.fotoUrl ?? '';
     _jenisKelamin = b.jenisKelamin;
     _generasiController.text = b.generasi;
     _varianWarnaController.text = b.varianWarna;
@@ -84,6 +87,7 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
     final breeder = Breeder(
       id: id,
       nama: _namaController.text.trim().isEmpty ? null : _namaController.text.trim(),
+      fotoUrl: _fotoController.text.trim().isEmpty ? null : _fotoController.text.trim(),
       jenisKelamin: _jenisKelamin,
       tanggalLahir: _tanggalLahir,
       generasi: _generasiController.text.trim(),
@@ -277,6 +281,12 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
               label: 'Nama',
               controller: _namaController,
               hint: 'Opsional',
+            ),
+            AppTextField(
+              label: 'URL Foto',
+              controller: _fotoController,
+              hint: 'https://... (opsional)',
+              keyboardType: TextInputType.url,
             ),
             DatePickerField(
               label: 'Tanggal Lahir',

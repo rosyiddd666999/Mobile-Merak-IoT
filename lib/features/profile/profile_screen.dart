@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 import '../../data/providers/auth_provider.dart';
+import '../../shared/app_photo.dart';
 import '../../shared/detail_app_bar.dart';
 import 'widgets/api_key_settings.dart';
 
@@ -25,7 +26,12 @@ class ProfileScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  const CircleAvatar(radius: 28, child: Icon(Icons.person, size: 28)),
+                  AppPhotoCircle(
+                    radius: 28,
+                    url: user?.fotoUrl,
+                    backgroundColor: AppColors.primaryTeal,
+                    fallback: const Icon(Icons.person, size: 28),
+                  ),
                   const SizedBox(width: 16),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

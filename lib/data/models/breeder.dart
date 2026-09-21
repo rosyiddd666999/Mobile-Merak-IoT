@@ -42,7 +42,7 @@ class Breeder {
     varianWarna: json['varian_warna'] as String,
     asal: json['asal'] as String,
     status: json['status'] as String,
-    fotoUrl: json['foto_url'] as String?,
+    fotoUrl: (json['image_url'] ?? json['foto_url']) as String?,
     parentJantanId: json['parent_jantan_id'] as String?,
     parentBetinaId: json['parent_betina_id'] as String?,
     createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'] as String) : null,
@@ -60,7 +60,7 @@ class Breeder {
     'varian_warna': varianWarna,
     'asal': asal,
     'status': status,
-    'foto_url': fotoUrl,
+    'image_url': fotoUrl,
     'parent_jantan_id': parentJantanId,
     'parent_betina_id': parentBetinaId,
   };

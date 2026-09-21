@@ -28,6 +28,7 @@ class UserCreate extends _$UserCreate {
     required String email,
     required String password,
     required String role,
+    String? fotoUrl,
   }) async {
     state = const AsyncLoading();
     final dio = ref.read(apiClientProvider);
@@ -38,6 +39,7 @@ class UserCreate extends _$UserCreate {
         'email': email,
         'password': password,
         'role': role,
+        if (fotoUrl != null && fotoUrl.isNotEmpty) 'image_url': fotoUrl,
       });
       final created = User.fromJson(response.data);
       state = AsyncData(created);

@@ -32,7 +32,7 @@ class Chick {
     beratAwal: (json['berat_awal'] as num).toDouble(),
     skorKesehatan: json['skor_kesehatan'] as String,
     status: json['status'] as String,
-    fotoUrl: json['foto_url'] as String?,
+    fotoUrl: (json['image_url'] ?? json['foto_url']) as String?,
     catatan: json['catatan'] as String?,
   );
 
@@ -45,7 +45,7 @@ class Chick {
     'berat_awal': beratAwal,
     'skor_kesehatan': skorKesehatan,
     'status': status,
-    'foto_url': fotoUrl,
+    'image_url': fotoUrl,
     if (catatan != null) 'catatan': catatan,
   };
 

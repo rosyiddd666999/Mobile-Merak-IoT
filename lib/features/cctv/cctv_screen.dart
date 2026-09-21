@@ -11,6 +11,7 @@ import '../../shared/detail_app_bar.dart';
 import 'widgets/cctv_error_view.dart';
 import 'widgets/cctv_status_badge.dart';
 import 'widgets/mjpeg_view.dart';
+import 'widgets/snapshot_gallery.dart';
 
 /// 2 feed MJPEG + health polling tiap 8 dtk (MOBILE.md §6.19/§7.5, cctv.md).
 /// Sumber: gateway RTSP->MJPEG; override `?url=` opsional (default .env).
@@ -153,7 +154,8 @@ class _CctvScreenState extends ConsumerState<CctvScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: ListView(
+        padding: const EdgeInsets.only(bottom: 16),
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -225,41 +227,39 @@ class _CctvScreenState extends ConsumerState<CctvScreen> {
                 ],
               ),
             ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  color: Colors.black,
-                  width: double.infinity,
-                  child: AspectRatio(
-                    aspectRatio: 16 / 9,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        MjpegPlayerView(
-                          feedUri: feedUri,
-                          client: headers.isEmpty ? null : HeaderHttpClient(headers),
-                          label: label,
-                          onError: () {
-                            if (mounted) setState(() => _streamFailed = true);
-                            ref.read(cctvProvider.notifier).reportStreamError();
-                          },
-                        ),
-                        if (showError)
-                          Container(
-                            color: Colors.black.withValues(alpha: 0.72),
-                            child: CctvErrorView(
-                              message: 'Stream tidak tersedia. Kamera standby atau gateway offline.',
-                              onRetry: () {
-                                setState(() => _streamFailed = false);
-                                ref.read(cctvProvider.notifier).reconnect();
-                              },
-                            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                color: Colors.black,
+                width: double.infinity,
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      MjpegPlayerView(
+                        feedUri: feedUri,
+                        client: headers.isEmpty ? null : HeaderHttpClient(headers),
+                        label: label,
+                        onError: () {
+                          if (mounted) setState(() => _streamFailed = true);
+                          ref.read(cctvProvider.notifier).reportStreamError();
+                        },
+                      ),
+                      if (showError)
+                        Container(
+                          color: Colors.black.withValues(alpha: 0.72),
+                          child: CctvErrorView(
+                            message: 'Stream tidak tersedia. Kamera standby atau gateway offline.',
+                            onRetry: () {
+                              setState(() => _streamFailed = false);
+                              ref.read(cctvProvider.notifier).reconnect();
+                            },
                           ),
-                      ],
-                    ),
+                        ),
+                    ],
                   ),
                 ),
               ),
@@ -287,6 +287,21 @@ class _CctvScreenState extends ConsumerState<CctvScreen> {
                 ),
               ],
             ),
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 8, 16, 8),
+            child: Text(
+              'Riwayat Snapshot',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textDark,
+              ),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: SnapshotGallery(),
           ),
         ],
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../core/constants.dart';
 import '../core/theme.dart';
 import '../data/providers/api_client_provider.dart';
 import '../data/providers/cctv_provider.dart';
@@ -50,8 +51,11 @@ class _CctvLiveCardState extends ConsumerState<CctvLiveCard> {
     final apiKey = ref.watch(apiKeyProvider);
     final jwt = ref.watch(jwtTokenProvider);
     final headers = <String, String>{};
-    if (apiKey != null && apiKey.isNotEmpty) headers['X-API-Key'] = apiKey;
-    if (jwt != null && jwt.isNotEmpty) headers['Authorization'] = 'Bearer $jwt';
+    // Sama seperti cctv_screen: jangan kirim kredensial ke host custom eksternal.
+    if (!CctvService.isExternalHost(feedUri, AppConstants.cctvBaseUrl)) {
+      if (apiKey != null && apiKey.isNotEmpty) headers['X-API-Key'] = apiKey;
+      if (jwt != null && jwt.isNotEmpty) headers['Authorization'] = 'Bearer $jwt';
+    }
 
     return Card(
       margin: EdgeInsets.zero,

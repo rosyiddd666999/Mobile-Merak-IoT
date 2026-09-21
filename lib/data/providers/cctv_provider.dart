@@ -1,10 +1,31 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../models/cctv_snapshot.dart';
 import '../services/cctv_service.dart';
 import 'api_client_provider.dart';
 import 'secure_storage_provider.dart';
 
 part 'cctv_provider.g.dart';
+
+/// Riwayat snapshot CCTV (`GET /api/cctv-snapshots`, terbaru dulu bila API
+/// mendukung `?limit`). Live stream tetap via MJPEG; ini galeri statis.
+@Riverpod(keepAlive: true)
+Future<List<CctvSnapshot>> cctvSnapshots(Ref ref) async {
+  final dio = ref.read(apiClientProvider);
+  final res = await dio.get('/api/cctv-snapshots');
+  final data = res.data;
+  final raw = data is List
+      ? data
+      : (data is Map<String, dynamic> && data['data'] is List
+          ? data['data'] as List
+          : const []);
+  return raw
+      .whereType<Map<String, dynamic>>()
+      .map(CctvSnapshot.fromJson)
+      .where((s) => s.url.isNotEmpty)
+      .toList();
+}
 
 enum CctvFeed { inkubator, kandang }
 

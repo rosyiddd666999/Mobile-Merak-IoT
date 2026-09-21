@@ -29,6 +29,7 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
   final _suffixController = TextEditingController();
   final _beratController = TextEditingController();
   final _skorController = TextEditingController(text: 'Sehat');
+  final _fotoController = TextEditingController();
   final _catatanController = TextEditingController();
 
   String? _eggId;
@@ -42,6 +43,7 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
     _suffixController.dispose();
     _beratController.dispose();
     _skorController.dispose();
+    _fotoController.dispose();
     _catatanController.dispose();
     super.dispose();
   }
@@ -60,6 +62,7 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
     _suffixController.text = s.startsWith('C') ? s.substring(1) : s;
     _beratController.text = '${chick.beratAwal}';
     _skorController.text = chick.skorKesehatan;
+    _fotoController.text = chick.fotoUrl ?? '';
     _catatanController.text = chick.catatan ?? '';
     _status = chick.status;
     try {
@@ -99,6 +102,7 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
       beratAwal: double.parse(_beratController.text.trim()),
       skorKesehatan: _skorController.text.trim(),
       status: _status,
+      fotoUrl: _fotoController.text.trim().isEmpty ? null : _fotoController.text.trim(),
       catatan: _catatanController.text.trim().isEmpty ? null : _catatanController.text.trim(),
     );
 
@@ -296,6 +300,12 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
               onChanged: (v) => setState(() => _status = v!),
             ),
             const SizedBox(height: 16),
+            AppTextField(
+              label: 'URL Foto',
+              controller: _fotoController,
+              hint: 'https://... (opsional)',
+              keyboardType: TextInputType.url,
+            ),
             AppTextField(
               label: 'Catatan',
               controller: _catatanController,

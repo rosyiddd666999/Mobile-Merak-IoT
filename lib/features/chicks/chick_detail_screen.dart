@@ -10,6 +10,7 @@ import '../../data/providers/auth_provider.dart';
 import '../../data/providers/chicks_provider.dart';
 import '../../data/providers/dashboard_provider.dart';
 import '../../shared/async_state_view.dart';
+import '../../shared/app_photo.dart';
 import '../../shared/confirm_dialog.dart';
 import '../../shared/design_kit.dart';
 import '../../shared/detail_app_bar.dart';
@@ -43,10 +44,11 @@ class ChickDetailScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(20),
                   child: Row(
                     children: [
-                      CircleAvatar(
+                      AppPhotoCircle(
                         radius: 32,
-                        backgroundColor: AppColors.tertiary.withValues(alpha: 0.12),
-                        child: const Icon(Icons.cruelty_free, color: AppColors.tertiary, size: 32),
+                        url: chick.fotoUrl,
+                        backgroundColor: AppColors.tertiary,
+                        fallback: const Icon(Icons.cruelty_free, color: AppColors.tertiary, size: 32),
                       ),
                       const SizedBox(width: 16),
                       Expanded(

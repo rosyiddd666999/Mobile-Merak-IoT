@@ -12,6 +12,7 @@ import '../../data/providers/chicks_provider.dart';
 import '../../data/providers/dashboard_provider.dart';
 import '../../data/providers/eggs_provider.dart';
 import '../../shared/async_state_view.dart';
+import '../../shared/app_photo.dart';
 import '../../shared/confirm_dialog.dart';
 import '../../shared/design_kit.dart';
 import '../../shared/detail_app_bar.dart';
@@ -70,10 +71,11 @@ class BreederDetailScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      CircleAvatar(
+                      AppPhotoCircle(
                         radius: 32,
-                        backgroundColor: genderColor.withValues(alpha: 0.12),
-                        child: Icon(
+                        url: breeder.fotoUrl,
+                        backgroundColor: genderColor,
+                        fallback: Icon(
                           isJantan ? Icons.male : Icons.female,
                           color: genderColor,
                           size: 36,

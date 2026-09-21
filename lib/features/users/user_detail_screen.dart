@@ -9,6 +9,7 @@ import '../../data/models/user.dart';
 import '../../data/providers/auth_provider.dart';
 import '../../data/providers/users_provider.dart';
 import '../../shared/async_state_view.dart';
+import '../../shared/app_photo.dart';
 import '../../shared/confirm_dialog.dart';
 import '../../shared/design_kit.dart';
 import '../../shared/detail_app_bar.dart';
@@ -53,10 +54,11 @@ class UserDetailScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(20),
                   child: Row(
                     children: [
-                      CircleAvatar(
+                      AppPhotoCircle(
                         radius: 32,
-                        backgroundColor: AppColors.primaryTeal.withValues(alpha: 0.12),
-                        child: Text(
+                        url: user.fotoUrl,
+                        backgroundColor: AppColors.primaryTeal,
+                        fallback: Text(
                           initial,
                           style: const TextStyle(
                             color: AppColors.primaryTeal,

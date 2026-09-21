@@ -22,6 +22,7 @@ class _UserFormScreenState extends ConsumerState<UserFormScreen> {
   final _idController = TextEditingController();
   final _namaController = TextEditingController();
   final _emailController = TextEditingController();
+  final _fotoController = TextEditingController();
   final _passwordController = TextEditingController();
 
   String _role = 'staff';
@@ -34,6 +35,7 @@ class _UserFormScreenState extends ConsumerState<UserFormScreen> {
     _idController.dispose();
     _namaController.dispose();
     _emailController.dispose();
+    _fotoController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -48,6 +50,7 @@ class _UserFormScreenState extends ConsumerState<UserFormScreen> {
       email: _emailController.text.trim(),
       password: _passwordController.text,
       role: _role,
+      fotoUrl: _fotoController.text.trim().isEmpty ? null : _fotoController.text.trim(),
     );
     if (!mounted) return;
     setState(() => _isSaving = false);
@@ -120,6 +123,12 @@ class _UserFormScreenState extends ConsumerState<UserFormScreen> {
                 keyboardType: TextInputType.emailAddress,
                 validator: validateEmail,
                 hint: 'user@example.com',
+              ),
+              AppTextField(
+                label: 'URL Foto',
+                controller: _fotoController,
+                keyboardType: TextInputType.url,
+                hint: 'https://... (opsional)',
               ),
               const AppLabel('Password *'),
               TextFormField(

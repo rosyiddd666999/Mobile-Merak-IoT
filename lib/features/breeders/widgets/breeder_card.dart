@@ -3,6 +3,7 @@ import '../../../core/status_mapper.dart';
 import '../../../core/theme.dart';
 import '../../../data/models/breeder.dart';
 import '../../../shared/app_card.dart';
+import '../../../shared/app_photo.dart';
 import '../../../shared/design_kit.dart';
 
 /// Statistik performa per indukan, dihitung lokal dari list telur/anakan
@@ -38,14 +39,9 @@ class BreederCard extends StatelessWidget {
 
     return AppRowCard(
       onTap: onTap,
-      leading: AppLeadingBox(
-        child: breeder.fotoUrl != null && breeder.fotoUrl!.isNotEmpty
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(breeder.fotoUrl!, fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => _fallbackIcon(isJantan)),
-              )
-            : _fallbackIcon(isJantan),
+      leading: AppPhotoBox(
+        url: breeder.fotoUrl,
+        fallback: _fallbackIcon(isJantan),
       ),
       title: nama,
       subtitle: sub,

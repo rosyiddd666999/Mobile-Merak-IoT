@@ -3,6 +3,7 @@ import '../../../core/status_mapper.dart';
 import '../../../core/theme.dart';
 import '../../../data/models/user.dart';
 import '../../../shared/app_card.dart';
+import '../../../shared/app_photo.dart';
 import '../../../shared/design_kit.dart';
 
 class UserTile extends StatelessWidget {
@@ -18,10 +19,11 @@ class UserTile extends StatelessWidget {
     return AppRowCard(
       onTap: onTap,
       showChevron: false,
-      leading: CircleAvatar(
+      leading: AppPhotoCircle(
         radius: 24,
-        backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-        child: Text(
+        url: user.fotoUrl,
+        backgroundColor: AppColors.primary,
+        fallback: Text(
           initial,
           style: const TextStyle(
             color: AppColors.primary,
