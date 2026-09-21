@@ -32,11 +32,8 @@ class RootAppBar extends ConsumerWidget implements PreferredSizeWidget {
     return AppBar(
       automaticallyImplyLeading: false,
       centerTitle: false,
-      leadingWidth: 200,
-      leading: const Padding(
-        padding: EdgeInsets.only(left: 12),
-        child: Center(child: PartnerLogos(size: 38, wide: true)),
-      ),
+      leadingWidth: 186,
+      leading: Center(child: PartnerLogos(size: 38, wide: true)),
       title: null,
       actions: [
         ...?actions,
@@ -53,7 +50,10 @@ class RootAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 right: 10,
                 top: 10,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.statusAlert,
                     borderRadius: BorderRadius.circular(AppRadius.chip),

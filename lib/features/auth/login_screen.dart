@@ -146,7 +146,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                const Center(child: PartnerLogos(size: 44, showLabel: true)),
+                const Center(child: PartnerLogos(size: 84, showLabel: true)),
                 const SizedBox(height: 16),
                 const Text(
                   'MerakNK v1.0.0',
