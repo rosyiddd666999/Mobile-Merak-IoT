@@ -60,6 +60,9 @@ class Breeder {
     'varian_warna': varianWarna,
     'asal': asal,
     'status': status,
+    // Tulis dua key: kanonis backend (foto_url, BACKEND.md §13.3) +
+    // alias baru (image_url) — FastAPI mengabaikan extra yang tak dikenal.
+    'foto_url': fotoUrl,
     'image_url': fotoUrl,
     'parent_jantan_id': parentJantanId,
     'parent_betina_id': parentBetinaId,

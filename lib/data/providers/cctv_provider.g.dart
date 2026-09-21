@@ -6,7 +6,7 @@ part of 'cctv_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$cctvSnapshotsHash() => r'17bdc57006b4dbe9a724d38e740b3dce29193438';
+String _$cctvSnapshotsHash() => r'c01a862eb2b1c2dafbc49c722f331e2b124a1a01';
 
 /// Riwayat snapshot CCTV (`GET /api/cctv-snapshots`, terbaru dulu bila API
 /// mendukung `?limit`). Live stream tetap via MJPEG; ini galeri statis.

@@ -23,7 +23,7 @@ final usersListProvider = FutureProvider<List<User>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef UsersListRef = FutureProviderRef<List<User>>;
-String _$userCreateHash() => r'ffb030327b808a7bc8fcd1ffd3b21a58ac823900';
+String _$userCreateHash() => r'2fbf03e15c677fca39179fb9ac8a4786ab8e7930';
 
 /// See also [UserCreate].
 @ProviderFor(UserCreate)

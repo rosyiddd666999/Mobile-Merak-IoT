@@ -28,7 +28,7 @@ class User {
       email: (json['email'] ?? '') as String,
       nama: ((json['nama'] ?? json['name'] ?? '') as String),
       role: role,
-      fotoUrl: (json['image_url'] ?? json['foto_url']) as String?,
+      fotoUrl: (json['avatar_url'] ?? json['image_url'] ?? json['foto_url']) as String?,
       createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'] as String) : null,
     );
   }
@@ -38,6 +38,8 @@ class User {
     'email': email,
     'nama': nama,
     'role': role,
+    // Kanonis backend: avatar_url (BACKEND.md §12); plus alias image_url.
+    'avatar_url': fotoUrl,
     'image_url': fotoUrl,
     'created_at': createdAt?.toIso8601String(),
   };

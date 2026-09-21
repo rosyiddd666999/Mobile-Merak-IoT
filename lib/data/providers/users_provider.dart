@@ -39,7 +39,10 @@ class UserCreate extends _$UserCreate {
         'email': email,
         'password': password,
         'role': role,
-        if (fotoUrl != null && fotoUrl.isNotEmpty) 'image_url': fotoUrl,
+        if (fotoUrl != null && fotoUrl.isNotEmpty) ...{
+          'avatar_url': fotoUrl,
+          'image_url': fotoUrl,
+        },
       });
       final created = User.fromJson(response.data);
       state = AsyncData(created);

@@ -72,5 +72,26 @@ class AlertDelete extends _$AlertDelete {
   }
 }
 
+@Riverpod(keepAlive: true)
+class AlertReader extends _$AlertReader {
+  @override
+  Future<void> build() async {}
+
+  /// Tandai dibaca di server (`PUT /api/alerts/{id}/read`, BACKEND.md §10).
+  /// 404 = sudah hilang, dianggap sukses. Return false bila gagal jaringan.
+  Future<bool> markRead(int id) async {
+    final dio = ref.read(apiClientProvider);
+    try {
+      await dio.put('/api/alerts/$id/read');
+    } on DioException catch (e) {
+      if (e.response?.statusCode != 404) return false;
+    } catch (_) {
+      return false;
+    }
+    ref.invalidate(alertsListProvider);
+    return true;
+  }
+}
+
 /// Progress bulk 0..1, null = idle.
 final alertBulkProgressProvider = StateProvider<double?>((ref) => null);

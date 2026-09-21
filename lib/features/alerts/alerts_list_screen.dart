@@ -302,6 +302,10 @@ class _AlertsListScreenState extends ConsumerState<AlertsListScreen> {
                                       ref
                                           .read(demoProvider.notifier)
                                           .markAlertRead(alert.id);
+                                    } else {
+                                      ref
+                                          .read(alertReaderProvider.notifier)
+                                          .markRead(alert.id);
                                     }
                                   },
                                   onDelete: null,
@@ -314,6 +318,10 @@ class _AlertsListScreenState extends ConsumerState<AlertsListScreen> {
                                     ref
                                         .read(demoProvider.notifier)
                                         .markAlertRead(alert.id);
+                                  } else {
+                                    ref
+                                        .read(alertReaderProvider.notifier)
+                                        .markRead(alert.id);
                                   }
                                 },
                                 onDeleteGroup: demo.active

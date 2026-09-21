@@ -68,6 +68,16 @@ class UploadService {
     return UploadResult(url: url, objectKey: data['object_key'] as String?);
   }
 
+  /// Ambil object_key dari URL absolut Minio untuk keperluan hapus:
+  /// `https://host/merak-storage/<folder>/<uuid>.jpg` -> `<folder>/<uuid>.jpg`.
+  /// Return null bila format tak dikenal (jangan hapus sembarang).
+  static String? objectKeyFromUrl(String? url) {
+    if (url == null || url.isEmpty) return null;
+    final uri = Uri.tryParse(url);
+    if (uri == null || uri.pathSegments.length < 3) return null;
+    return uri.pathSegments.sublist(1).join('/');
+  }
+
   /// Hapus file milik sesi ini (mis. diganti/dibatalkan). Gagal = abaikan.
   Future<void> deletePhoto(String objectKey) async {
     try {

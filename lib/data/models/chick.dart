@@ -45,6 +45,7 @@ class Chick {
     'berat_awal': beratAwal,
     'skor_kesehatan': skorKesehatan,
     'status': status,
+    'foto_url': fotoUrl,
     'image_url': fotoUrl,
     if (catatan != null) 'catatan': catatan,
   };

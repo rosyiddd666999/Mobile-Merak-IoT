@@ -84,6 +84,7 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     final id = _assembledId;
+    final previousUrl = _photo?.url;
     setState(() => _isSaving = true);
 
     // Upload foto device dulu (gagal = save dibatalkan, data tidak setengah).
@@ -140,6 +141,16 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
         SnackBar(content: Text('Gagal: $errMsg'), backgroundColor: AppColors.critical),
       );
       return;
+    }
+
+    // Foto diganti/dihapus saat edit: bersihkan file lama di bucket
+    // (BACKEND.md §13.3) — hanya setelah save sukses.
+    final oldKey = UploadService.objectKeyFromUrl(previousUrl);
+    if (widget.isEdit &&
+        oldKey != null &&
+        oldKey.isNotEmpty &&
+        previousUrl != fotoUrl) {
+      UploadService(ref.read(apiClientProvider)).deletePhoto(oldKey);
     }
 
     ref.invalidate(breedersListProvider);

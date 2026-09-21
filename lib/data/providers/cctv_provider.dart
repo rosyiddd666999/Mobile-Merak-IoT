@@ -13,7 +13,10 @@ part 'cctv_provider.g.dart';
 @Riverpod(keepAlive: true)
 Future<List<CctvSnapshot>> cctvSnapshots(Ref ref) async {
   final dio = ref.read(apiClientProvider);
-  final res = await dio.get('/api/cctv-snapshots');
+  final res = await dio.get(
+    '/api/cctv-snapshots',
+    queryParameters: {'limit': 50},
+  );
   final data = res.data;
   final raw = data is List
       ? data

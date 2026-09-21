@@ -98,6 +98,7 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
     setState(() => _isSaving = true);
 
     // Upload foto device dulu (gagal = save dibatalkan).
+    final previousUrl = _photo?.url;
     String? fotoUrl = _photo?.url;
     if (_photo?.file != null) {
       try {
@@ -169,6 +170,15 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
         SnackBar(content: Text('Gagal: $errMsg'), backgroundColor: AppColors.critical),
       );
       return;
+    }
+
+    // Foto diganti/dihapus saat edit: bersihkan file lama (BACKEND.md §13.3).
+    final oldKey = UploadService.objectKeyFromUrl(previousUrl);
+    if (widget.isEdit &&
+        oldKey != null &&
+        oldKey.isNotEmpty &&
+        previousUrl != fotoUrl) {
+      UploadService(ref.read(apiClientProvider)).deletePhoto(oldKey);
     }
 
     ref.invalidate(chicksListProvider);
