@@ -6,9 +6,12 @@ import '../../core/utils/api_error.dart';
 import '../../core/utils/silsilah.dart';
 import '../../core/utils/validators.dart';
 import '../../data/models/breeder.dart';
+import '../../data/providers/api_client_provider.dart';
 import '../../data/providers/breeders_provider.dart';
 import '../../data/providers/dashboard_provider.dart';
+import '../../data/services/upload_service.dart';
 import '../../shared/app_form.dart';
+import '../../shared/app_photo_picker.dart';
 import '../../shared/detail_app_bar.dart';
 import '../../shared/loading_widget.dart';
 
@@ -26,8 +29,8 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _suffixController = TextEditingController();
   final _namaController = TextEditingController();
-  final _fotoController = TextEditingController();
   final _generasiController = TextEditingController(text: 'F0');
+  PickedPhoto? _photo;
   final _varianWarnaController = TextEditingController();
 
   String _jenisKelamin = 'jantan';
@@ -43,7 +46,6 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
   void dispose() {
     _suffixController.dispose();
     _namaController.dispose();
-    _fotoController.dispose();
     _generasiController.dispose();
     _varianWarnaController.dispose();
     super.dispose();
@@ -62,7 +64,7 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
     if (_initialized) return;
     _initialized = true;
     _namaController.text = b.nama ?? '';
-    _fotoController.text = b.fotoUrl ?? '';
+    _photo = PickedPhoto(url: b.fotoUrl);
     _jenisKelamin = b.jenisKelamin;
     _generasiController.text = b.generasi;
     _varianWarnaController.text = b.varianWarna;
@@ -84,10 +86,27 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
     final id = _assembledId;
     setState(() => _isSaving = true);
 
+    // Upload foto device dulu (gagal = save dibatalkan, data tidak setengah).
+    String? fotoUrl = _photo?.url;
+    if (_photo?.file != null) {
+      try {
+        final up = await UploadService(ref.read(apiClientProvider))
+            .uploadPhoto(_photo!.file!, UploadFolder.breeders);
+        fotoUrl = up.url;
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload foto gagal: ${friendlyApiError(e)}')),
+        );
+        return;
+      }
+    }
+
     final breeder = Breeder(
       id: id,
       nama: _namaController.text.trim().isEmpty ? null : _namaController.text.trim(),
-      fotoUrl: _fotoController.text.trim().isEmpty ? null : _fotoController.text.trim(),
+      fotoUrl: fotoUrl,
       jenisKelamin: _jenisKelamin,
       tanggalLahir: _tanggalLahir,
       generasi: _generasiController.text.trim(),
@@ -282,11 +301,11 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
               controller: _namaController,
               hint: 'Opsional',
             ),
-            AppTextField(
-              label: 'URL Foto',
-              controller: _fotoController,
-              hint: 'https://... (opsional)',
-              keyboardType: TextInputType.url,
+            AppPhotoPicker(
+              label: 'Foto',
+              initialUrl: _photo?.url,
+              folder: UploadFolder.breeders,
+              onChanged: (p) => _photo = p,
             ),
             DatePickerField(
               label: 'Tanggal Lahir',

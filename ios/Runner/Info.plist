@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Untuk memotret indukan, anakan, dan pengguna.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Untuk memilih foto indukan, anakan, dan pengguna dari galeri.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>

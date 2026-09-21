@@ -7,10 +7,13 @@ import '../../core/utils/silsilah.dart';
 import '../../core/utils/validators.dart';
 import '../../data/models/chick.dart';
 import '../../data/models/egg.dart';
+import '../../data/providers/api_client_provider.dart';
 import '../../data/providers/chicks_provider.dart';
 import '../../data/providers/dashboard_provider.dart';
 import '../../data/providers/eggs_provider.dart';
+import '../../data/services/upload_service.dart';
 import '../../shared/app_form.dart';
+import '../../shared/app_photo_picker.dart';
 import '../../shared/detail_app_bar.dart';
 import '../../shared/loading_widget.dart';
 
@@ -29,8 +32,8 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
   final _suffixController = TextEditingController();
   final _beratController = TextEditingController();
   final _skorController = TextEditingController(text: 'Sehat');
-  final _fotoController = TextEditingController();
   final _catatanController = TextEditingController();
+  PickedPhoto? _photo;
 
   String? _eggId;
   DateTime _tanggalMenetas = DateTime.now();
@@ -43,7 +46,6 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
     _suffixController.dispose();
     _beratController.dispose();
     _skorController.dispose();
-    _fotoController.dispose();
     _catatanController.dispose();
     super.dispose();
   }
@@ -62,7 +64,7 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
     _suffixController.text = s.startsWith('C') ? s.substring(1) : s;
     _beratController.text = '${chick.beratAwal}';
     _skorController.text = chick.skorKesehatan;
-    _fotoController.text = chick.fotoUrl ?? '';
+    _photo = PickedPhoto(url: chick.fotoUrl);
     _catatanController.text = chick.catatan ?? '';
     _status = chick.status;
     try {
@@ -95,6 +97,23 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
     }
     setState(() => _isSaving = true);
 
+    // Upload foto device dulu (gagal = save dibatalkan).
+    String? fotoUrl = _photo?.url;
+    if (_photo?.file != null) {
+      try {
+        final up = await UploadService(ref.read(apiClientProvider))
+            .uploadPhoto(_photo!.file!, UploadFolder.chicks);
+        fotoUrl = up.url;
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload foto gagal: ${friendlyApiError(e)}')),
+        );
+        return;
+      }
+    }
+
     final chick = Chick(
       id: id,
       eggId: _eggId!,
@@ -102,7 +121,7 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
       beratAwal: double.parse(_beratController.text.trim()),
       skorKesehatan: _skorController.text.trim(),
       status: _status,
-      fotoUrl: _fotoController.text.trim().isEmpty ? null : _fotoController.text.trim(),
+      fotoUrl: fotoUrl,
       catatan: _catatanController.text.trim().isEmpty ? null : _catatanController.text.trim(),
     );
 
@@ -300,11 +319,11 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
               onChanged: (v) => setState(() => _status = v!),
             ),
             const SizedBox(height: 16),
-            AppTextField(
-              label: 'URL Foto',
-              controller: _fotoController,
-              hint: 'https://... (opsional)',
-              keyboardType: TextInputType.url,
+            AppPhotoPicker(
+              label: 'Foto',
+              initialUrl: _photo?.url,
+              folder: UploadFolder.chicks,
+              onChanged: (p) => _photo = p,
             ),
             AppTextField(
               label: 'Catatan',
