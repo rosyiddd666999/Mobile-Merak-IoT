@@ -19,6 +19,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   Timer? _timer;
   bool _resolved = false;
+  bool _ready = false;
+  String? _pendingRoute; // '/dashboard' | '/login' — dieksekusi saat waktunya tiba
   late final AnimationController _anim;
   late final Animation<double> _logoScale;
   late final Animation<double> _logoFade;
@@ -71,7 +73,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       CurvedAnimation(parent: _anim, curve: const Interval(0.65, 1.0)),
     );
     _partnersFade = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _anim, curve: const Interval(0.78, 1.0)),
+      CurvedAnimation(parent: _anim, curve: const Interval(0.60, 0.85)),
     );
     _anim.forward();
     _scheduleTimeout();
@@ -89,21 +91,42 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   void _scheduleTimeout() {
-    _timer = Timer(const Duration(seconds: 5), () {
-      if (!mounted || _resolved) return;
+    // Waktu tampil MINIMUM 5 detik agar animasi + logo mitra selesai —
+    // navigasi (login/dashboard) tidak boleh memotong splash.
+    _timer = Timer(const Duration(milliseconds: 5000), () {
+      if (!mounted) return;
+      _ready = true;
+      _flushPending();
+    });
+  }
+
+  /// Jalankan rute tertunda bila waktu minimum terpenuhi.
+  void _flushPending() {
+    if (!_ready || _resolved || !mounted) return;
+    final route = _pendingRoute;
+    if (route == null) {
+      // Timeout tanpa keputusan auth: default ke login.
       _resolved = true;
       context.go('/login');
-    });
+      return;
+    }
+    _resolved = true;
+    context.go(route);
+  }
+
+  /// Catat keputusan rute; eksekusi ditahan sampai timer 5 detik bunyi.
+  void _decide(String route) {
+    _pendingRoute = route;
+    _flushPending();
   }
 
   void _goTo(AuthResponse? auth) {
     if (!mounted || _resolved) return;
-    _resolved = true;
     if (auth != null) {
       ref.read(authProvider.notifier).fetchMe();
-      context.go('/dashboard');
+      _decide('/dashboard');
     } else {
-      context.go('/login');
+      _decide('/login');
     }
   }
 
