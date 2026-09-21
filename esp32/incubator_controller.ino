@@ -109,6 +109,20 @@ const char* topic_telemetry_mist   = "iot/telemetry/status_mist";
 const char* topic_telemetry_motor  = "iot/telemetry/status_motor";
 const char* topic_telemetry_sensor = "iot/telemetry/status_sensor";
 
+// Ambang aktual perangkat (dibaca app untuk deteksi mismatch vs DB).
+const char* topic_telemetry_thresh_on   = "iot/telemetry/thresh_temp_on";
+const char* topic_telemetry_thresh_off  = "iot/telemetry/thresh_temp_off";
+const char* topic_telemetry_humid_low   = "iot/telemetry/thresh_humid_low";
+const char* topic_telemetry_humid_high  = "iot/telemetry/thresh_humid_high";
+
+void publishThresholds() {
+  if (!client.connected()) return;
+  client.publish(topic_telemetry_thresh_on, String(temp_thresh_on, 1).c_str());
+  client.publish(topic_telemetry_thresh_off, String(temp_thresh_off, 1).c_str());
+  client.publish(topic_telemetry_humid_low, String(humid_thresh_low, 1).c_str());
+  client.publish(topic_telemetry_humid_high, String(humid_thresh_high, 1).c_str());
+}
+
 const char* topic_cmd_thresh_on        = "iot/cmd/lamp_thresh_on";
 const char* topic_cmd_thresh_off       = "iot/cmd/lamp_thresh_off";
 const char* topic_cmd_humid_thresh_low  = "iot/cmd/humid_thresh_low";
@@ -207,15 +221,19 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   if (String(topic) == topic_cmd_thresh_on) {
     temp_thresh_on = message.toFloat();
+    publishThresholds();
   }
   else if (String(topic) == topic_cmd_thresh_off) {
     temp_thresh_off = message.toFloat();
+    publishThresholds();
   }
   else if (String(topic) == topic_cmd_humid_thresh_low) {
     humid_thresh_low = message.toFloat();
+    publishThresholds();
   }
   else if (String(topic) == topic_cmd_humid_thresh_high) {
     humid_thresh_high = message.toFloat();
+    publishThresholds();
   }
   else if (String(topic) == topic_cmd_lamp_mode) {
     if (message == "ON")         lamp_mode = "MANUAL_ON";
@@ -248,6 +266,7 @@ bool reconnect() {
     client.subscribe(topic_cmd_lamp_mode);
     client.subscribe(topic_cmd_mist_trig);
     client.subscribe(topic_cmd_motor_trig);
+    publishThresholds();
     return true;
   } else {
     logMqttDrop(client.state());

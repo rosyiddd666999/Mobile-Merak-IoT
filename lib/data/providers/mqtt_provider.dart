@@ -11,7 +11,8 @@ import '../services/mqtt_service.dart';
 import 'api_client_provider.dart';
 import 'incubator_provider.dart';
 
-/// Topik subscribe (firmware ESP32, 6 topik incl. status_sensor).
+/// Topik subscribe (firmware ESP32, 6 topik incl. status_sensor
+/// + 4 topik ambang aktual untuk deteksi mismatch vs DB).
 const mqttSubscribeTopics = [
   'iot/telemetry/temperature',
   'iot/telemetry/humidity',
@@ -19,6 +20,10 @@ const mqttSubscribeTopics = [
   'iot/telemetry/status_motor',
   'iot/telemetry/status_mist',
   'iot/telemetry/status_sensor',
+  'iot/telemetry/thresh_temp_on',
+  'iot/telemetry/thresh_temp_off',
+  'iot/telemetry/thresh_humid_low',
+  'iot/telemetry/thresh_humid_high',
 ];
 
 class MqttState {
@@ -36,6 +41,11 @@ class MqttState {
   final int reconnectCount;
   final bool authFailed;
   final DateTime? lastManualRotation; // picu manual terakhir dari app ini
+  // Ambang aktual perangkat (null = belum diterima dari firmware).
+  final double? threshTempOn;
+  final double? threshTempOff;
+  final double? threshHumidLow;
+  final double? threshHumidHigh;
 
   const MqttState({
     this.status = 'idle',
@@ -52,6 +62,10 @@ class MqttState {
     this.reconnectCount = 0,
     this.authFailed = false,
     this.lastManualRotation,
+    this.threshTempOn,
+    this.threshTempOff,
+    this.threshHumidLow,
+    this.threshHumidHigh,
   });
 
   bool get hasTelemetry => temperature != null && humidity != null;
@@ -81,6 +95,10 @@ class MqttState {
     int? reconnectCount,
     bool? authFailed,
     DateTime? lastManualRotation,
+    double? threshTempOn,
+    double? threshTempOff,
+    double? threshHumidLow,
+    double? threshHumidHigh,
   }) =>
       MqttState(
         status: status ?? this.status,
@@ -97,6 +115,10 @@ class MqttState {
         reconnectCount: reconnectCount ?? this.reconnectCount,
         authFailed: authFailed ?? this.authFailed,
         lastManualRotation: lastManualRotation ?? this.lastManualRotation,
+        threshTempOn: threshTempOn ?? this.threshTempOn,
+        threshTempOff: threshTempOff ?? this.threshTempOff,
+        threshHumidLow: threshHumidLow ?? this.threshHumidLow,
+        threshHumidHigh: threshHumidHigh ?? this.threshHumidHigh,
       );
 }
 
@@ -105,6 +127,21 @@ class MqttCmd {
   static const lampMode = 'iot/cmd/lamp_mode'; // AUTO | ON | OFF
   static const motorTrigger = 'iot/cmd/motor_trigger'; // TRIGGER
   static const mistTrigger = 'iot/cmd/mist_trigger'; // TRIGGER (mist ~10 dtk)
+  // Ambang batas (sinkron dua arah dengan DB via settings; string desimal).
+  static const threshTempOn = 'iot/cmd/lamp_thresh_on';
+  static const threshTempOff = 'iot/cmd/lamp_thresh_off';
+  static const threshHumidLow = 'iot/cmd/humid_thresh_low';
+  static const threshHumidHigh = 'iot/cmd/humid_thresh_high';
+}
+
+/// Telemetri ambang aktual perangkat (publish firmware saat boot + tiap
+/// terima cmd; retain disarankan) — untuk deteksi mismatch vs DB.
+class MqttThresh {
+  static const tempOn = 'iot/telemetry/thresh_temp_on';
+  static const tempOff = 'iot/telemetry/thresh_temp_off';
+  static const humidLow = 'iot/telemetry/thresh_humid_low';
+  static const humidHigh = 'iot/telemetry/thresh_humid_high';
+  static const all = [tempOn, tempOff, humidLow, humidHigh];
 }
 
 /// Mode lampu: label Indonesia <-> payload firmware.
@@ -427,6 +464,22 @@ class MqttNotifier extends StateNotifier<MqttState>
       case 'iot/telemetry/status_sensor':
         state = state.copyWith(statusSensor: payload.trim().toUpperCase());
         break;
+      case 'iot/telemetry/thresh_temp_on':
+        final v = double.tryParse(payload.trim());
+        if (v != null) state = state.copyWith(threshTempOn: v);
+        break;
+      case 'iot/telemetry/thresh_temp_off':
+        final v = double.tryParse(payload.trim());
+        if (v != null) state = state.copyWith(threshTempOff: v);
+        break;
+      case 'iot/telemetry/thresh_humid_low':
+        final v = double.tryParse(payload.trim());
+        if (v != null) state = state.copyWith(threshHumidLow: v);
+        break;
+      case 'iot/telemetry/thresh_humid_high':
+        final v = double.tryParse(payload.trim());
+        if (v != null) state = state.copyWith(threshHumidHigh: v);
+        break;
       default:
         break;
     }
@@ -481,6 +534,29 @@ class MqttNotifier extends StateNotifier<MqttState>
   /// Picu mist maker sekali (mist jalan ±10 dtk di firmware).
   /// Return false bila belum terhubung.
   bool triggerMist() => publishCommand(MqttCmd.mistTrigger, 'TRIGGER');
+
+  /// Kirim 4 ambang ke firmware (sinkron dua arah dengan DB).
+  /// Return jumlah yang terkirim (0 bila belum terhubung).
+  int publishThresholds({
+    required double tempOn,
+    required double tempOff,
+    required double humidLow,
+    required double humidHigh,
+  }) {
+    if (!_service.isConnected) return 0;
+    var n = 0;
+    final pairs = {
+      MqttCmd.threshTempOn: tempOn.toString(),
+      MqttCmd.threshTempOff: tempOff.toString(),
+      MqttCmd.threshHumidLow: humidLow.toString(),
+      MqttCmd.threshHumidHigh: humidHigh.toString(),
+    };
+    for (final e in pairs.entries) {
+      _service.publish(e.key, e.value);
+      n++;
+    }
+    return n;
+  }
 
   /// Catat rotasi manual: label langsung akurat (optimistis) + tulis
   /// permanen ke `POST /api/incubator/rotation-logs` agar riwayat

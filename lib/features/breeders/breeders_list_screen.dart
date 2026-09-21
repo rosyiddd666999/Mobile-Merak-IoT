@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/app_routes.dart';
+import '../../core/status_mapper.dart';
 import '../../core/theme.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../data/models/breeder.dart';
@@ -175,7 +176,7 @@ class _BreedersListScreenState extends ConsumerState<BreedersListScreen> {
         : all.where((b) => b.generasi.toUpperCase().startsWith(g)).length;
     int statusCount(String o) => o == 'Semua'
         ? all.length
-        : all.where((b) => _statusLabel(b.status) == o).length;
+        : all.where((b) => StatusMapper.breeder(b.status).$1 == o).length;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -249,7 +250,8 @@ class _BreedersListScreenState extends ConsumerState<BreedersListScreen> {
           !b.generasi.toUpperCase().startsWith(_genFilter)) {
         return false;
       }
-      if (_statusFilter != 'Semua' && _statusLabel(b.status) != _statusFilter) {
+      if (_statusFilter != 'Semua' &&
+          StatusMapper.breeder(b.status).$1 != _statusFilter) {
         return false;
       }
       if (_query.isNotEmpty) {
@@ -258,19 +260,6 @@ class _BreedersListScreenState extends ConsumerState<BreedersListScreen> {
       }
       return true;
     }).toList();
-  }
-
-  String _statusLabel(String s) {
-    switch (s) {
-      case 'breeding':
-        return 'Aktif';
-      case 'resting':
-        return 'Istirahat';
-      case 'ready_for_sale':
-        return 'Siap Jual';
-      default:
-        return s;
-    }
   }
 }
 

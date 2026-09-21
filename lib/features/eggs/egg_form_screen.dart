@@ -70,6 +70,10 @@ class _EggFormScreenState extends ConsumerState<EggFormScreen> {
     _catatanController.text = egg.catatan ?? '';
     _fertilitas = egg.fertilitas;
     _akhir = egg.akhir;
+    // Sanitasi data lama yang tidak valid: Infertil tidak boleh Menetas.
+    if (_fertilitas == 'Infertil' && _akhir == 'Menetas') {
+      _akhir = 'Proses';
+    }
     try {
       _tanggalMasuk = DateTime.parse(egg.tanggalMasuk);
     } catch (_) {}
@@ -116,9 +120,18 @@ class _EggFormScreenState extends ConsumerState<EggFormScreen> {
       );
       return;
     }
-    final slot = _selectedSlot ?? int.tryParse(_slotController.text.trim());
-    if (slot == null || slot < 1 || slot > 100) {
+    // Guard: tolak kombinasi Infertil + Menetas.
+    if (_fertilitas == 'Infertil' && _akhir == 'Menetas') {
       ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Telur infertil tidak bisa menetas'),
+          backgroundColor: AppColors.critical,
+        ),
+      );
+      return;
+    }
+    final slot = _selectedSlot ?? int.tryParse(_slotController.text.trim());
+    if (slot == null || slot < 1 || slot > 100) {      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Pilih slot 1-100 pada peta slot'),
           backgroundColor: AppColors.critical,
@@ -385,6 +398,7 @@ class _EggFormScreenState extends ConsumerState<EggFormScreen> {
             const SizedBox(height: 16),
             const AppLabel('Fertilitas *'),
             DropdownButtonFormField<String>(
+              key: ValueKey('fertilitas-$_fertilitas'),
               initialValue: _fertilitas,
               items: const [
                 DropdownMenuItem(
@@ -394,16 +408,39 @@ class _EggFormScreenState extends ConsumerState<EggFormScreen> {
                 DropdownMenuItem(value: 'Fertil', child: Text('Fertil')),
                 DropdownMenuItem(value: 'Infertil', child: Text('Infertil')),
               ],
-              onChanged: (v) => setState(() => _fertilitas = v!),
+              onChanged: (v) {
+                if (v == null) return;
+                setState(() {
+                  _fertilitas = v;
+                  if (_fertilitas == 'Infertil' && _akhir == 'Menetas') {
+                    _akhir = 'Proses';
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Telur infertil tidak bisa menetas, status akhir dikembalikan ke Proses',
+                        ),
+                      ),
+                    );
+                  }
+                });
+              },
             ),
             const SizedBox(height: 16),
             const AppLabel('Akhir *'),
             DropdownButtonFormField<String>(
+              key: ValueKey('akhir-$_fertilitas-$_akhir'),
               initialValue: _akhir,
-              items: const [
-                DropdownMenuItem(value: 'Proses', child: Text('Proses')),
-                DropdownMenuItem(value: 'Menetas', child: Text('Menetas')),
-                DropdownMenuItem(value: 'Gagal', child: Text('Gagal')),
+              items: [
+                const DropdownMenuItem(
+                  value: 'Proses',
+                  child: Text('Proses'),
+                ),
+                if (_fertilitas != 'Infertil')
+                  const DropdownMenuItem(
+                    value: 'Menetas',
+                    child: Text('Menetas'),
+                  ),
+                const DropdownMenuItem(value: 'Gagal', child: Text('Gagal')),
               ],
               onChanged: (v) => setState(() => _akhir = v!),
             ),

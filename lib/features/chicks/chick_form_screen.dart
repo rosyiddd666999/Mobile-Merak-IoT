@@ -311,10 +311,10 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
             DropdownButtonFormField<String>(
               initialValue: _status,
               items: const [
-                DropdownMenuItem(value: 'newborn', child: Text('Newborn')),
-                DropdownMenuItem(value: 'growing', child: Text('Growing')),
-                DropdownMenuItem(value: 'ready_for_sale', child: Text('Ready for Sale')),
-                DropdownMenuItem(value: 'sold', child: Text('Sold')),
+                DropdownMenuItem(value: 'newborn', child: Text('Baru Menetas')),
+                DropdownMenuItem(value: 'growing', child: Text('Tumbuh')),
+                DropdownMenuItem(value: 'ready_for_sale', child: Text('Siap Jual')),
+                DropdownMenuItem(value: 'sold', child: Text('Terjual')),
               ],
               onChanged: (v) => setState(() => _status = v!),
             ),

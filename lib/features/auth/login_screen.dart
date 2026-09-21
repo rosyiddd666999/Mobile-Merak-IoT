@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 import '../../data/providers/auth_provider.dart';
+import '../../shared/partner_logos.dart';
 import 'widgets/login_form.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -145,6 +146,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
+                const Center(child: PartnerLogos(size: 44, showLabel: true)),
+                const SizedBox(height: 16),
                 const Text(
                   'MerakNK v1.0.0',
                   textAlign: TextAlign.center,

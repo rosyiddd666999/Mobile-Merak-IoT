@@ -4,6 +4,7 @@ import '../../core/utils/api_error.dart';
 import '../../core/utils/validators.dart';
 import '../../data/models/incubator_settings.dart';
 import '../../data/providers/incubator_provider.dart';
+import '../../data/providers/mqtt_provider.dart';
 import '../../shared/loading_widget.dart';
 import '../../shared/error_widget.dart';
 import '../../shared/detail_app_bar.dart';
@@ -23,6 +24,29 @@ class _IncubatorSettingsScreenState extends ConsumerState<IncubatorSettingsScree
   final _lembapMaxController = TextEditingController();
   final _intervalController = TextEditingController();
   bool _isSaving = false;
+
+  /// Teks mismatch DB vs perangkat, null bila selaras/belum ada data firmware.
+  String? _mismatchText({
+    required double? suhuMin,
+    required double? suhuMax,
+    required double? lembapMin,
+    required double? lembapMax,
+    required MqttState mqtt,
+  }) {
+    final t = [
+      mqtt.threshTempOn, mqtt.threshTempOff, mqtt.threshHumidLow, mqtt.threshHumidHigh
+    ];
+    if (t.any((v) => v == null)) return null;
+    bool eq(double? a, double? b) =>
+        a != null && b != null && (a - b).abs() < 0.001;
+    if (eq(suhuMin, mqtt.threshTempOn) &&
+        eq(suhuMax, mqtt.threshTempOff) &&
+        eq(lembapMin, mqtt.threshHumidLow) &&
+        eq(lembapMax, mqtt.threshHumidHigh)) {
+      return null;
+    }
+    return 'Perangkat (${mqtt.threshTempOn}–${mqtt.threshTempOff}°C) ≠ server. Ketuk Selaraskan.';
+  }
 
   @override
   void dispose() {
@@ -57,14 +81,48 @@ class _IncubatorSettingsScreenState extends ConsumerState<IncubatorSettingsScree
 
     await ref.read(incubatorSettingsUpdateProvider.notifier).update(updated);
 
+    // Tulis dua arah: DB sudah via PUT di atas, kini dorong ke perangkat
+    // agar firmware tak tertinggal (split-brain lama: DB vs ESP beda).
+    var deviceOk = false;
+    if (mounted) {
+      final sent = ref.read(mqttProvider.notifier).publishThresholds(
+            tempOn: updated.suhuMin,
+            tempOff: updated.suhuMax,
+            humidLow: updated.kelembapanMin,
+            humidHigh: updated.kelembapanMax,
+          );
+      deviceOk = sent == 4;
+    }
+
     if (!mounted) return;
     setState(() => _isSaving = false);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pengaturan tersimpan')));
+    ref.invalidate(incubatorSettingsProvider);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(deviceOk
+          ? 'Tersimpan: server ✓, perangkat ✓'
+          : 'Tersimpan di server ✓, perangkat ✗ (offline) — selaraskan saat online'),
+    ));
+  }
+
+  /// Kirim ulang nilai form ke perangkat (tombol Selaraskan).
+  void _syncToDevice() {
+    final sent = ref.read(mqttProvider.notifier).publishThresholds(
+          tempOn: double.tryParse(_suhuMinController.text) ?? 0,
+          tempOff: double.tryParse(_suhuMaxController.text) ?? 0,
+          humidLow: double.tryParse(_lembapMinController.text) ?? 0,
+          humidHigh: double.tryParse(_lembapMaxController.text) ?? 0,
+        );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(sent == 4
+          ? 'Ambang dikirim ke perangkat'
+          : 'Perangkat offline — hubungkan MQTT dulu'),
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(incubatorSettingsProvider);
+    final mqtt = ref.watch(mqttProvider);
 
     return Scaffold(
       appBar: const DetailAppBar(title: 'Pengaturan Inkubator'),
@@ -74,6 +132,15 @@ class _IncubatorSettingsScreenState extends ConsumerState<IncubatorSettingsScree
         data: (settings) {
           if (_suhuMinController.text.isEmpty) _initFromSettings(settings);
 
+          // Bandingkan DB (form) vs aktual perangkat (telemetri thresh_*).
+          final mismatch = _mismatchText(
+            suhuMin: double.tryParse(_suhuMinController.text),
+            suhuMax: double.tryParse(_suhuMaxController.text),
+            lembapMin: double.tryParse(_lembapMinController.text),
+            lembapMax: double.tryParse(_lembapMaxController.text),
+            mqtt: mqtt,
+          );
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Form(
@@ -81,6 +148,29 @@ class _IncubatorSettingsScreenState extends ConsumerState<IncubatorSettingsScree
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (mismatch != null) ...[
+                    Card(
+                      color: const Color(0xFFFFF8E1),
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.warning_amber_outlined, color: Color(0xFFF5A524)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(mismatch, style: const TextStyle(fontSize: 12)),
+                            ),
+                            TextButton(
+                              onPressed: _syncToDevice,
+                              child: const Text('Selaraskan'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   Text('Suhu Minimum', style: Theme.of(context).textTheme.titleMedium),
                   TextFormField(
                     controller: _suhuMinController,

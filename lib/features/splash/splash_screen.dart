@@ -26,13 +26,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late final Animation<Offset> _subtitleSlide;
   late final Animation<double> _subtitleFade;
   late final Animation<double> _loadingFade;
+  late final Animation<double> _partnersFade;
 
   @override
   void initState() {
     super.initState();
     _anim = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
+      duration: const Duration(milliseconds: 2600),
     );
     _logoScale = Tween<double>(begin: 0.6, end: 1).animate(
       CurvedAnimation(
@@ -68,6 +69,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _loadingFade = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _anim, curve: const Interval(0.65, 1.0)),
     );
+    _partnersFade = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _anim, curve: const Interval(0.78, 1.0)),
+    );
     _anim.forward();
     _scheduleTimeout();
     _preload();
@@ -84,7 +88,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   void _scheduleTimeout() {
-    _timer = Timer(const Duration(seconds: 3), () {
+    _timer = Timer(const Duration(seconds: 5), () {
       if (!mounted || _resolved) return;
       _resolved = true;
       context.go('/login');
@@ -107,6 +111,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _timer?.cancel();
     _anim.dispose();
     super.dispose();
+  }
+
+  /// Logo mitra dibungkus putih (JPEG tak transparan).
+  Widget _partnerLogo(String asset) {
+    return Container(
+      width: 56,
+      height: 56,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Image.asset(asset, fit: BoxFit.cover),
+      ),
+    );
   }
 
   @override
@@ -205,6 +226,31 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         color: Colors.white60,
                         letterSpacing: 0.8,
                       ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 28),
+              FadeTransition(
+                opacity: _partnersFade,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Didukung oleh',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Colors.white60,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _partnerLogo('assets/images/logo-kel-merak.jpeg'),
+                        const SizedBox(width: 12),
+                        _partnerLogo('assets/images/logo-pertamina.jpeg'),
+                      ],
                     ),
                   ],
                 ),

@@ -334,9 +334,9 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
             DropdownButtonFormField<String>(
               initialValue: _status,
               items: const [
-                DropdownMenuItem(value: 'breeding', child: Text('Breeding')),
-                DropdownMenuItem(value: 'resting', child: Text('Resting')),
-                DropdownMenuItem(value: 'ready_for_sale', child: Text('Ready for Sale')),
+                DropdownMenuItem(value: 'breeding', child: Text('Aktif')),
+                DropdownMenuItem(value: 'resting', child: Text('Istirahat')),
+                DropdownMenuItem(value: 'ready_for_sale', child: Text('Siap Jual')),
               ],
               onChanged: (v) => setState(() => _status = v!),
             ),

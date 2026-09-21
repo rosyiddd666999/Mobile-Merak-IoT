@@ -688,6 +688,8 @@ class _TelemetryControlsState extends ConsumerState<_TelemetryControls> {
             },
           ),
         ),
+        const SizedBox(height: 12),
+        const _AutoRotationCard(),
         if (reason != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
@@ -762,6 +764,66 @@ class _TelemetryControlsState extends ConsumerState<_TelemetryControls> {
       default:
         return LampMode.auto;
     }
+  }
+}
+
+/// Kartu info rotasi otomatis firmware (MOTOR_AUTO_INTERVAL tiap 4 jam).
+/// Anchor jadwal berikut: [lastManualRotation] dulu, fallback
+/// [lastTelemetryAt]; '-' bila tak ada data. Hitung mundur refresh
+/// tiap 30 detik. Tombol manual ada di kartu "Rotasi Rak" (tak diubah).
+class _AutoRotationCard extends ConsumerStatefulWidget {
+  const _AutoRotationCard();
+
+  @override
+  ConsumerState<_AutoRotationCard> createState() => _AutoRotationCardState();
+}
+
+class _AutoRotationCardState extends ConsumerState<_AutoRotationCard> {
+  Timer? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  String _countdown(DateTime anchor) {
+    final next = anchor.add(const Duration(hours: 4));
+    final rem = next.difference(DateTime.now());
+    if (rem.isNegative || rem.inSeconds < 30) return 'segera';
+    if (rem.inHours >= 1) {
+      final rest = rem.inMinutes % 60;
+      if (rest == 0) return '${rem.inHours} jam lagi';
+      return '${rem.inHours} jam $rest mnt lagi';
+    }
+    if (rem.inMinutes >= 1) return '${rem.inMinutes} mnt lagi';
+    return '${rem.inSeconds} dtk lagi';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mqtt = ref.watch(mqttProvider);
+    final anchor = mqtt.lastManualRotation ?? mqtt.lastTelemetryAt;
+    final label = anchor == null ? '-' : _countdown(anchor);
+    return _ControlCard(
+      icon: Icons.autorenew,
+      title: 'Rotasi Otomatis',
+      statusLabel: label,
+      statusActive: anchor != null,
+      loading: false,
+      child: const Text(
+        'Rak berputar otomatis tiap 4 jam (firmware)',
+        style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+      ),
+    );
   }
 }
 

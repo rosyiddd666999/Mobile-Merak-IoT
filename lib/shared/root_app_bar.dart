@@ -5,9 +5,10 @@ import '../core/theme.dart';
 import '../data/providers/alerts_provider.dart';
 import '../data/providers/auth_provider.dart';
 import '../data/providers/demo_provider.dart';
+import 'partner_logos.dart';
 
-/// AppBar untuk 4 rute utama (tab bottom nav).
-/// Tanpa tombol back / burger — + notifikasi & avatar profil di kanan atas.
+/// AppBar untuk 5 rute utama (tab bottom nav): judul tab di kiri atas +
+/// logo mitra, tanpa tombol back — + notifikasi & avatar profil di kanan.
 class RootAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
@@ -30,9 +31,21 @@ class RootAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
     return AppBar(
       automaticallyImplyLeading: false,
-      title: Text(title),
+      centerTitle: false,
+      title: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: AppColors.textDark,
+        ),
+      ),
       actions: [
         ...?actions,
+        const Padding(
+          padding: EdgeInsets.only(right: 4),
+          child: Center(child: PartnerLogos(size: 26)),
+        ),
         Stack(
           alignment: Alignment.center,
           children: [

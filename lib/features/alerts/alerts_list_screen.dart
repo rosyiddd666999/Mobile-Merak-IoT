@@ -22,6 +22,42 @@ class AlertsListScreen extends ConsumerStatefulWidget {
   ConsumerState<AlertsListScreen> createState() => _AlertsListScreenState();
 }
 
+/// Kelompokkan alert se-tipe + se-level yang rentangnya <= 1 jam
+/// (berdasar [Alert.createdAt], terbaru dulu). Tanpa tanggal = grup sendiri.
+List<List<Alert>> groupAlerts(List<Alert> alerts) {
+  if (alerts.isEmpty) return [];
+  final sorted = List<Alert>.from(alerts)
+    ..sort((a, b) {
+      final at = a.createdAt;
+      final bt = b.createdAt;
+      if (at == null && bt == null) return 0;
+      if (at == null) return 1;
+      if (bt == null) return -1;
+      return bt.compareTo(at);
+    });
+  final groups = <List<Alert>>[];
+  for (final alert in sorted) {
+    var placed = false;
+    final t = alert.createdAt;
+    if (t != null) {
+      for (final g in groups) {
+        final head = g.first;
+        final ht = head.createdAt;
+        if (head.tipe == alert.tipe &&
+            head.level == alert.level &&
+            ht != null &&
+            ht.difference(t).abs() <= const Duration(hours: 1)) {
+          g.add(alert);
+          placed = true;
+          break;
+        }
+      }
+    }
+    if (!placed) groups.add([alert]);
+  }
+  return groups;
+}
+
 class _AlertsListScreenState extends ConsumerState<AlertsListScreen> {
   bool _bulkCancelled = false;
 
@@ -180,6 +216,27 @@ class _AlertsListScreenState extends ConsumerState<AlertsListScreen> {
     );
   }
 
+  Future<void> _deleteGroup(List<Alert> members) async {
+    final ids = members.map((a) => a.id).toList();
+    final ok = await showConfirmDialog(
+      context,
+      title: 'Hapus ${ids.length} notifikasi?',
+      message: 'Grup ini akan dihapus permanen dan tidak bisa dibatalkan.',
+      confirmText: 'Hapus',
+    );
+    if (!ok || !mounted) return;
+    final result =
+        await ref.read(alertDeleteProvider.notifier).deleteMany(ids);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(result.failed == 0
+            ? '${result.deleted} notifikasi dihapus'
+            : '${result.deleted} dihapus, ${result.failed} gagal — coba lagi'),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final demo = ref.watch(demoProvider);
@@ -229,18 +286,41 @@ class _AlertsListScreenState extends ConsumerState<AlertsListScreen> {
                         icon: Icons.notifications_outlined,
                         message: 'Tidak ada notifikasi',
                       )
-                    : ListView.builder(
-                        itemCount: alerts.length,
-                        itemBuilder: (_, i) {
-                          final alert = alerts[i];
-                          return AlertTile(
-                            alert: alert,
-                            onMarkRead: () {
-                              if (demo.active) {
-                                ref.read(demoProvider.notifier).markAlertRead(alert.id);
+                    : Builder(
+                        builder: (context) {
+                          final groups = groupAlerts(alerts);
+                          return ListView.builder(
+                            itemCount: groups.length,
+                            itemBuilder: (_, i) {
+                              final members = groups[i];
+                              if (members.length == 1) {
+                                final alert = members.first;
+                                return AlertTile(
+                                  alert: alert,
+                                  onMarkRead: () {
+                                    if (demo.active) {
+                                      ref
+                                          .read(demoProvider.notifier)
+                                          .markAlertRead(alert.id);
+                                    }
+                                  },
+                                  onDelete: null,
+                                );
                               }
+                              return AlertGroupTile(
+                                members: members,
+                                onMarkRead: (alert) {
+                                  if (demo.active) {
+                                    ref
+                                        .read(demoProvider.notifier)
+                                        .markAlertRead(alert.id);
+                                  }
+                                },
+                                onDeleteGroup: demo.active
+                                    ? null
+                                    : () => _deleteGroup(members),
+                              );
                             },
-                            onDelete: null,
                           );
                         },
                       ),
