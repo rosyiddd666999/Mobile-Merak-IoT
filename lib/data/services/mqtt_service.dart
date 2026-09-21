@@ -124,6 +124,14 @@ class MqttService {
       final uri = Uri.parse(url);
       final host = uri.host.isNotEmpty ? uri.host : url;
       final port = uri.hasPort ? uri.port : 8883;
+      // Fail-fast: jangan lakukan DNS lookup atas string sampah (mis. URL utuh
+      // nyasar jadi hostname) — itu dulu sebabkan infinite `Failed host lookup`.
+      if (host.isEmpty || host.contains('://') || host.contains('/')) {
+        _connecting = false;
+        lastErrorDetail = 'host MQTT tidak valid (cek MQTT_HOST, harus bare hostname)';
+        if (!kReleaseMode) debugPrint('[MQTT] $lastErrorDetail');
+        return false;
+      }
       final useWs =
           uri.scheme == 'wss' || uri.scheme == 'ws' || url.contains('/mqtt');
       // Native mqtts (8883, MOBILE.md §12) butuh TLS; wss juga TLS.

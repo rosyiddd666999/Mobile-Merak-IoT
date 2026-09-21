@@ -60,8 +60,10 @@ flutter:
   uses-material-design: true
 
   assets:
-    # .env TIDAK dibundle agar secret dev tidak ikut ke APK/IPA release.
-    # Dev lokal: pasang file .env di root lalu `flutter run` biasa.
+    # .env dibundle untuk DEV lokal agar `flutter run` biasa langsung jalan.
+    # File .env tetap di-ignore git (tidak ikut commit). Untuk RELEASE,
+    # pakai --dart-define agar secret tidak tertanam via asset.
+    - .env
     - assets/images/logo-nb.png
     - assets/images/logo.png
 

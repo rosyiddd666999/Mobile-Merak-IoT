@@ -1,10 +1,10 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'utils/env_utils.dart';
 
 import 'config.dart';
 
 class AppConstants {
   static String get baseUrl {
-    final env = dotenv.get('BASE_URL', fallback: '');
+    final env = envOr('BASE_URL', fallback: '');
     if (env.isNotEmpty) return env;
     return AppConfig.baseUrl;
   }
@@ -12,7 +12,7 @@ class AppConstants {
   /// Kosong bila tidak dikonfigurasi — caller wajib menolak request auth
   /// daripada memakai fallback lemah bawaan.
   static String get apiKeyAndroid {
-    final env = dotenv.get('API_KEY_ANDROID', fallback: '');
+    final env = envOr('API_KEY_ANDROID', fallback: '');
     if (env.isNotEmpty) return env;
     return AppConfig.apiKeyAndroid;
   }
@@ -23,7 +23,7 @@ class AppConstants {
 
   // Base origin untuk CCTV (Nginx HTTPS). Isi CCTV_BASE_URL bila beda host.
   static String get cctvBaseUrl {
-    final custom = dotenv.get('CCTV_BASE_URL', fallback: '');
+    final custom = envOr('CCTV_BASE_URL', fallback: '');
     if (custom.isNotEmpty) return custom.replaceAll(RegExp(r'/+$'), '');
     final origin = Uri.tryParse(baseUrl)?.origin;
     return (origin == null || origin.isEmpty) ? baseUrl : origin;
@@ -31,7 +31,7 @@ class AppConstants {
 
   // Path feed MJPEG dari .env web (RTSP_MJPEG_URL), fallback dart-define.
   static String get cctvInkubatorPath {
-    final env = dotenv.get('RTSP_MJPEG_URL', fallback: '');
+    final env = envOr('RTSP_MJPEG_URL', fallback: '');
     if (env.isNotEmpty) return env.startsWith('/') ? env : '/$env';
     return AppConfig.cctvIncubatorPath;
   }
@@ -44,13 +44,37 @@ class AppConstants {
   static String get cctvHealthUrl => '$cctvBaseUrl$cctvHealthPath';
 
   // MQTT native (mqtts host:8883, MOBILE.md §12) — .env dulu, fallback dart-define.
+  // Disanitasi: bila terisi full URL (wss://host/mqtt), ambil host-nya saja
+  // agar mqttNativeUrl tak jadi sampah `mqtts://wss://...` (pernah sebabkan
+  // infinite `Failed host lookup`).
   static String get mqttHost {
-    final env = dotenv.get('MQTT_HOST', fallback: '');
-    return env.isNotEmpty ? env : AppConfig.mqttHost;
+    final raw = envOr('MQTT_HOST', fallback: '');
+    final sanitized = _bareHost(raw);
+    if (sanitized.isNotEmpty) return sanitized;
+    return _bareHost(AppConfig.mqttHost);
+  }
+
+  /// Target RTSP inkubator untuk query `?url=` (gateway mewajibkan).
+  /// Kosong = feed tanpa `?url=` (kandang / belum dikonfigurasi).
+  static String get cctvRtspUrl {
+    final env = envOr('CCTV_RTSP_URL', fallback: '');
+    if (env.isNotEmpty) return env;
+    return AppConfig.cctvRtspUrl;
+  }
+
+  /// Ambil bare hostname dari input yang bisa berupa host polos
+  /// atau URL utuh (`wss://host:8884/mqtt`).
+  static String _bareHost(String input) {
+    final v = input.trim();
+    if (v.isEmpty) return '';
+    if (!v.contains('://')) return v.split('/').first.split(':').first.trim();
+    final host = Uri.tryParse(v)?.host.trim() ?? '';
+    if (host.isNotEmpty) return host;
+    return v.split('/').first.split(':').first.trim();
   }
 
   static int get mqttPort {
-    final env = dotenv.get('MQTT_PORT', fallback: '');
+    final env = envOr('MQTT_PORT', fallback: '');
     final n = int.tryParse(env);
     if (n != null) return n;
     return AppConfig.mqttPort;
@@ -59,18 +83,18 @@ class AppConstants {
   /// URL koneksi native: mqtts://host:8883 (bukan wss 8884 khusus web).
   static String get mqttNativeUrl => 'mqtts://$mqttHost:$mqttPort';
   static String get mqttUrl {
-    final env = dotenv.get('MQTT_URL', fallback: '');
+    final env = envOr('MQTT_URL', fallback: '');
     return env.isNotEmpty ? env : AppConfig.mqttUrl;
   }
 
   static String? get mqttUsername {
-    final env = dotenv.get('MQTT_USERNAME', fallback: '');
+    final env = envOr('MQTT_USERNAME', fallback: '');
     if (env.isNotEmpty) return env;
     return AppConfig.mqttUsername.isEmpty ? null : AppConfig.mqttUsername;
   }
 
   static String? get mqttPassword {
-    final env = dotenv.get('MQTT_PASSWORD', fallback: '');
+    final env = envOr('MQTT_PASSWORD', fallback: '');
     if (env.isNotEmpty) return env;
     return AppConfig.mqttPassword.isEmpty ? null : AppConfig.mqttPassword;
   }

@@ -41,19 +41,31 @@ class CctvService {
   }
 
   Uri incubatorFeed({int? cacheBuster, String? baseOverride}) =>
-      _feed(AppConstants.cctvInkubatorPath, cacheBuster, baseOverride);
+      _feed(AppConstants.cctvInkubatorPath, cacheBuster, baseOverride,
+          rtspTarget: AppConstants.cctvRtspUrl);
+  // Kandang belum ada kamera — feed tanpa `?url=` sampai target tersedia.
   Uri kandangFeed({int? cacheBuster, String? baseOverride}) =>
       _feed(AppConstants.cctvKandangPath, cacheBuster, baseOverride);
 
-  Uri _feed(String path, int? cacheBuster, String? baseOverride) {
+  Uri _feed(String path, int? cacheBuster, String? baseOverride, {String? rtspTarget}) {
     final rawBase = (baseOverride?.trim().isNotEmpty == true) ? baseOverride!.trim() : AppConstants.cctvBaseUrl;
     final base = rawBase.replaceAll(RegExp(r'/+$'), '');
     var uri = Uri.parse('$base$path');
-    // Gateway mengabaikan query ?url= (FRONTEND_WEBSITE.md §3C.3) — jangan kirim
-    // RTSP dari app (bocor ke log). Target RTSP murni env gateway server.
-    if (cacheBuster != null) {
-      uri = uri.replace(queryParameters: {...uri.queryParameters, 't': '$cacheBuster'});
+    // Gateway MEWAJIBKAN query ?url=<rtsp> (kontrak website).
+    // Hanya kirim ke host resmi (== CCTV_BASE_URL), bukan ke custom override —
+    // password kamera tidak boleh exfil ke host arbitrari.
+    final trustedHost = Uri.tryParse(AppConstants.cctvBaseUrl)?.host.toLowerCase() ?? '';
+    final target = rtspTarget?.trim() ?? '';
+    final qp = <String, String>{...uri.queryParameters};
+    if (target.isNotEmpty &&
+        trustedHost.isNotEmpty &&
+        uri.host.toLowerCase() == trustedHost) {
+      qp['url'] = target;
     }
+    if (cacheBuster != null) {
+      qp['t'] = '$cacheBuster';
+    }
+    if (qp.isNotEmpty) uri = uri.replace(queryParameters: qp);
     return uri;
   }
 

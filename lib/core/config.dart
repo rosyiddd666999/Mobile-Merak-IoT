@@ -17,4 +17,7 @@ class AppConfig {
       String.fromEnvironment('CCTV_KANDANG_PATH', defaultValue: '/kandang_feed');
   static const cctvHealthPath =
       String.fromEnvironment('CCTV_HEALTH_PATH', defaultValue: '/cctv_health');
+  // Target RTSP kamera inkubator (wajib ?url= oleh gateway).
+  // Tanpa secret bawaan — isi via .env CCTV_RTSP_URL / --dart-define.
+  static const cctvRtspUrl = String.fromEnvironment('CCTV_RTSP_URL', defaultValue: '');
 }
