@@ -7,7 +7,7 @@ class CctvService {
   CctvService(this._dio);
   final Dio _dio;
 
-  /// Host custom hanya boleh HTTPS dan tanpa userinfo/path aneh.
+  /// Host custom hanya boleh origin HTTPS murni (tanpa path/query aneh).
   /// Mengembalikan null bila tidak valid — caller wajib menolak dan
   /// TIDAK mengirim header auth ke host tersebut.
   static String? sanitizeCustomBase(String? input) {
@@ -17,7 +17,11 @@ class CctvService {
     if (uri == null || !uri.hasScheme || !uri.hasAuthority) return null;
     if (uri.scheme.toLowerCase() != 'https') return null;
     if (uri.userInfo.isNotEmpty) return null;
+    // Tolak path (mis. tempelan RTSP `/rtsp://...` atau `/video_feed` nyasar
+    // ke kolom host) dan query/fragment — host murni saja.
+    if (uri.path.isNotEmpty && uri.path != '/') return null;
     if (uri.hasQuery || uri.hasFragment) return null;
+    if (v.toLowerCase().contains('rtsp:')) return null;
     // Tolak IP privat/loopback yang diketik manual agar tidak jadi SSRF lokal.
     final host = uri.host.toLowerCase();
     if (host == 'localhost' ||
@@ -30,6 +34,31 @@ class CctvService {
       return null;
     }
     return v;
+  }
+
+  /// Normalisasi base toleran: user boleh menempel origin polos
+  /// (`https://host`), full link website (`https://host/video_feed?url=...`),
+  /// bahkan RTSP nyasar sebagai path. Hasil selalu `origin` (+ `?url=` bila
+  /// ada) agar tak terbentuk URL sampah `host/rtsp://.../cctv_health`.
+  /// Gagal parse / non-https -> fallback CCTV_BASE_URL resmi.
+  static String normalizeBase(String? rawBase) {
+    final fallback = AppConstants.cctvBaseUrl;
+    final v = rawBase?.trim() ?? '';
+    if (v.isEmpty) return fallback;
+    if (v.toLowerCase().startsWith('rtsp:')) return fallback;
+    final uri = Uri.tryParse(v);
+    if (uri == null || !uri.hasScheme || !uri.hasAuthority) return fallback;
+    if (uri.scheme.toLowerCase() != 'https') return fallback;
+    final clean = Uri(
+      scheme: uri.scheme,
+      host: uri.host,
+      port: uri.hasPort ? uri.port : null,
+      queryParameters: uri.queryParameters.containsKey('url')
+          ? {'url': uri.queryParameters['url']!}
+          : null,
+    );
+    final s = clean.toString().replaceAll(RegExp(r'/+$'), '');
+    return s.isEmpty ? fallback : s;
   }
 
   /// True bila feed mengarah ke host di luar base resmi — UI wajib tampilkan
@@ -48,9 +77,20 @@ class CctvService {
       _feed(AppConstants.cctvKandangPath, cacheBuster, baseOverride);
 
   Uri _feed(String path, int? cacheBuster, String? baseOverride, {String? rtspTarget}) {
-    final rawBase = (baseOverride?.trim().isNotEmpty == true) ? baseOverride!.trim() : AppConstants.cctvBaseUrl;
-    final base = rawBase.replaceAll(RegExp(r'/+$'), '');
-    var uri = Uri.parse('$base$path');
+    final base = normalizeBase(
+        (baseOverride?.trim().isNotEmpty == true) ? baseOverride!.trim() : AppConstants.cctvBaseUrl);
+    // normalizeBase bisa kembalikan `origin?url=...` — rakit ulang agar path
+    // selalu di belakang host, bukan di belakang query.
+    final baseUri = Uri.parse(base);
+    var uri = Uri(
+      scheme: baseUri.scheme,
+      host: baseUri.host,
+      port: baseUri.hasPort ? baseUri.port : null,
+      path: path,
+      queryParameters: baseUri.queryParameters.containsKey('url')
+          ? {'url': baseUri.queryParameters['url']!}
+          : null,
+    );
     // Satu-key fleksibel (cukup salah satu terisi):
     // 1. Base SUDAH bawa ?url= (full link ala website ditempel ke
     //    CCTV_BASE_URL) -> pakai apa adanya.
@@ -75,8 +115,9 @@ class CctvService {
   }
 
   Uri healthUri({String? baseOverride}) {
-    final rawBase = (baseOverride?.trim().isNotEmpty == true) ? baseOverride!.trim() : AppConstants.cctvBaseUrl;
-    return Uri.parse('${rawBase.replaceAll(RegExp(r'/+$'), '')}${AppConstants.cctvHealthPath}');
+    final base = normalizeBase(
+        (baseOverride?.trim().isNotEmpty == true) ? baseOverride!.trim() : AppConstants.cctvBaseUrl);
+    return Uri.parse('$base${AppConstants.cctvHealthPath}');
   }
 
   String get healthPath => AppConstants.cctvHealthPath;
@@ -84,9 +125,10 @@ class CctvService {
   /// Health polling (pola CctvPage.jsx): baca `incubator_reachable: bool`.
   /// Return null bila field tidak ada; throw bila HTTP/gateway error.
   Future<bool?> fetchReachable({String? baseOverride}) async {
-    final rawBase = (baseOverride?.trim().isNotEmpty == true) ? baseOverride!.trim() : AppConstants.cctvBaseUrl;
+    final base = normalizeBase(
+        (baseOverride?.trim().isNotEmpty == true) ? baseOverride!.trim() : AppConstants.cctvBaseUrl);
     // Full URL ke host CCTV (bisa beda dari API base) — bukan path relatif Dio.
-    final res = await _dio.get('${rawBase.replaceAll(RegExp(r'/+$'), '')}${AppConstants.cctvHealthPath}');
+    final res = await _dio.get('$base${AppConstants.cctvHealthPath}');
     final data = res.data;
     if (data is Map<String, dynamic>) {
       final v = data['incubator_reachable'];

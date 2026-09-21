@@ -61,7 +61,11 @@ final apiClientProvider = Provider<Dio>((ref) {
 
 void _logDioError(DioException err) {
   final method = err.requestOptions.method;
-  final url = err.requestOptions.uri.toString();
+  // Samarkan kredensial inline (mis. rtsp://user:pass@host nyasar ke URL).
+  final url = err.requestOptions.uri.toString().replaceAllMapped(
+    RegExp(r'://[^/@\s:]+:[^/@\s]+@'),
+    (_) => '://***@',
+  );
   final status = err.response?.statusCode;
 
   // Endpoint sakit yang diketahui (500 OperationalError server): cukup satu baris.

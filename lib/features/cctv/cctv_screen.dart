@@ -67,6 +67,11 @@ class _CctvScreenState extends ConsumerState<CctvScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
+              'Isi origin saja (mis. https://host). Tempelan path/RTSP dibersihkan otomatis.',
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 8),
+            const Text(
               'Hanya HTTPS publik. Token TIDAK dikirim ke host custom yang belum terverifikasi.',
               style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
