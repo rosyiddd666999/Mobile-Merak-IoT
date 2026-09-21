@@ -1,6 +1,10 @@
 import 'package:dio/dio.dart';
 
 String friendlyApiError(Object error) {
+  // Pesan spesifik dari service (mis. UploadService) — tampilkan apa adanya.
+  if (error is StateError && error.message.toString().isNotEmpty) {
+    return error.message.toString();
+  }
   if (error is DioException) {
     final status = error.response?.statusCode;
     switch (status) {

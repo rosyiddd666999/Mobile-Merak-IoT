@@ -58,7 +58,17 @@ class UploadService {
       '/api/storage/upload',
       data: form,
       onSendProgress: onProgress,
-    );
+    ).catchError((Object e) {
+      // 500 = layanan penyimpanan backend bermasalah (umumnya MinIO tidak
+      // terjangkau, BACKEND.md §7.1) — bedakan dari salah foto/user.
+      if (e is DioException && e.response?.statusCode == 500) {
+        throw StateError(
+          'Layanan penyimpanan server bermasalah (upload gagal). '
+          'Foto Anda tidak salah — coba Simpan ulang nanti.',
+        );
+      }
+      throw e;
+    });
     final data = res.data;
     if (data is! Map<String, dynamic>) {
       throw const FormatException('Respons upload tidak dikenal');
