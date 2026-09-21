@@ -9,9 +9,11 @@ import '../../data/providers/alerts_provider.dart';
 import '../../data/providers/auth_provider.dart';
 import '../../data/providers/demo_provider.dart';
 import '../../shared/confirm_dialog.dart';
+import '../../shared/design_kit.dart';
 import '../../shared/loading_widget.dart';
 import '../../shared/error_widget.dart';
 import '../../shared/detail_app_bar.dart';
+import 'widgets/alert_tile.dart';
 
 class AlertsListScreen extends ConsumerStatefulWidget {
   const AlertsListScreen({super.key});
@@ -223,100 +225,26 @@ class _AlertsListScreenState extends ConsumerState<AlertsListScreen> {
                     },
                   )
                 : alerts.isEmpty
-                    ? const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(32),
-                          child: Text(
-                            'Tidak ada notifikasi',
-                            style: TextStyle(color: AppColors.textSecondary),
-                          ),
-                        ),
+                    ? const EmptyState(
+                        icon: Icons.notifications_outlined,
+                        message: 'Tidak ada notifikasi',
                       )
                     : ListView.builder(
                         itemCount: alerts.length,
                         itemBuilder: (_, i) {
                           final alert = alerts[i];
-                          return _AlertRow(
+                          return AlertTile(
                             alert: alert,
-                            isDemo: demo.active,
-                            isPemilik: isPemilik,
                             onMarkRead: () {
                               if (demo.active) {
                                 ref.read(demoProvider.notifier).markAlertRead(alert.id);
                               }
                             },
-                            onDelete: () {
-                              // demo alerts cannot be deleted individually
-                            },
+                            onDelete: null,
                           );
                         },
                       ),
       ),
     );
-  }
-}
-
-class _AlertRow extends StatelessWidget {
-  final Alert alert;
-  final bool isDemo;
-  final bool isPemilik;
-  final VoidCallback? onMarkRead;
-  final VoidCallback? onDelete;
-
-  const _AlertRow({
-    required this.alert,
-    required this.isDemo,
-    required this.isPemilik,
-    this.onMarkRead,
-    this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: _statusIcon(),
-      title: Text(alert.pesan, style: TextStyle(fontWeight: alert.isRead ? FontWeight.normal : FontWeight.bold)),
-      subtitle: Text(alert.createdAt != null ? _formatDateTime(alert.createdAt!) : '', style: const TextStyle(fontSize: 12)),
-      trailing: alert.isRead
-          ? null
-          : IconButton(
-              icon: const Icon(Icons.check_circle_outline, color: AppColors.primary),
-              onPressed: onMarkRead,
-            ),
-    );
-  }
-
-  Widget _statusIcon() {
-    Color color;
-    switch (alert.level) {
-      case 'critical':
-        color = AppColors.critical;
-        break;
-      case 'warning':
-        color = AppColors.warning;
-        break;
-      default:
-        color = AppColors.info;
-    }
-    return CircleAvatar(
-      backgroundColor: color.withValues(alpha: 0.1),
-      child: Icon(_tipeIcon, color: color, size: 20),
-    );
-  }
-
-  IconData get _tipeIcon {
-    switch (alert.tipe) {
-      case 'suhu':
-        return Icons.thermostat;
-      case 'kelembapan':
-        return Icons.water_drop;
-      default:
-        return Icons.notifications;
-    }
-  }
-
-  String _formatDateTime(DateTime dt) {
-    String pad(int n) => n.toString().padLeft(2, '0');
-    return '${pad(dt.day)}/${pad(dt.month)}/${dt.year} ${pad(dt.hour)}:${pad(dt.minute)}';
   }
 }

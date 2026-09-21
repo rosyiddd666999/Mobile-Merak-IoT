@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/app_routes.dart';
 import '../../core/theme.dart';
-import '../../core/utils/api_error.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../data/models/breeder.dart';
 import '../../data/models/chick.dart';
@@ -12,9 +12,8 @@ import '../../data/providers/auth_provider.dart';
 import '../../data/providers/chicks_provider.dart';
 import '../../data/providers/eggs_provider.dart';
 import '../../data/providers/sales_provider.dart';
+import '../../shared/async_state_view.dart';
 import '../../shared/design_kit.dart';
-import '../../shared/loading_widget.dart';
-import '../../shared/error_widget.dart';
 import '../../shared/root_app_bar.dart';
 import 'widgets/breeder_card.dart';
 
@@ -50,7 +49,7 @@ class _BreedersListScreenState extends ConsumerState<BreedersListScreen> {
       appBar: const RootAppBar(title: 'Indukan'),
       floatingActionButton: canCreate
           ? FloatingActionButton(
-              onPressed: () => context.push('/breeders/new'),
+              onPressed: () => context.push(AppRoutes.breederNew),
               backgroundColor: AppColors.darkCard,
               child: const Icon(Icons.add, color: Colors.white),
             )
@@ -63,13 +62,14 @@ class _BreedersListScreenState extends ConsumerState<BreedersListScreen> {
           ref.invalidate(breedersListProvider);
           await ref.read(breedersListProvider.future);
         },
-        child: breedersAsync.when(
-          loading: () => const LoadingWidget(message: 'Memuat data indukan...'),
-          error: (err, _) => AppErrorWidget(
-            message: friendlyApiError(err),
-            onRetry: () => ref.refresh(breedersListProvider),
-          ),
-          data: (breeders) {
+        child: AsyncStateView(
+          async: breedersAsync,
+          loadingMessage: 'Memuat data indukan...',
+          emptyIcon: Icons.pets_outlined,
+          emptyMessage: 'Belum ada data indukan',
+          onRetry: () => ref.refresh(breedersListProvider),
+          isEmpty: (breeders) => breeders.isEmpty,
+          dataBuilder: (breeders) {
             final sales = salesAsync.valueOrNull ?? const [];
             final soldIds = {
               for (final s in sales)
@@ -106,7 +106,7 @@ class _BreedersListScreenState extends ConsumerState<BreedersListScreen> {
                   _LatestActivityCard(
                     eggs: latest.take(3).toList(),
                     names: names,
-                    onOpen: (id) => context.push('/eggs/$id'),
+                    onOpen: (id) => context.push(AppRoutes.eggDetail(id)),
                   ),
                 ],
                 const SizedBox(height: 12),
@@ -123,7 +123,7 @@ class _BreedersListScreenState extends ConsumerState<BreedersListScreen> {
                       breeder: b,
                       stats: stats[b.id],
                       sold: soldIds.contains(b.id),
-                      onTap: () => context.push('/breeders/${b.id}'),
+                      onTap: () => context.push(AppRoutes.breederDetail(b.id)),
                     ),
                   ),
               ],
@@ -160,7 +160,7 @@ class _BreedersListScreenState extends ConsumerState<BreedersListScreen> {
             child: IconButton(
               icon: const Icon(Icons.add, color: Colors.white),
               tooltip: 'Tambah',
-              onPressed: () => context.push('/breeders/new'),
+              onPressed: () => context.push(AppRoutes.breederNew),
             ),
           ),
         ],
@@ -176,32 +176,19 @@ class _BreedersListScreenState extends ConsumerState<BreedersListScreen> {
     int statusCount(String o) => o == 'Semua'
         ? all.length
         : all.where((b) => _statusLabel(b.status) == o).length;
-    Widget chip(String label, bool selected, VoidCallback onTap) {
-      return Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: ChoiceChip(
-          label: Text(label),
-          selected: selected,
-          onSelected: (_) => setState(onTap),
-          selectedColor: AppColors.darkCard,
-          labelStyle: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: selected ? Colors.white : AppColors.textDark,
-          ),
-        ),
-      );
-    }
-
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
           for (final g in ['Semua', 'F0', 'F1'])
-            chip(
-              g == 'Semua' ? 'Semua ${genCount(g)}' : '$g ${genCount(g)}',
-              _genFilter == g,
-              () => _genFilter = g,
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: AppFilterChip(
+                label: g,
+                count: genCount(g),
+                selected: _genFilter == g,
+                onTap: () => setState(() => _genFilter = g),
+              ),
             ),
           Container(
             width: 1,
@@ -210,10 +197,16 @@ class _BreedersListScreenState extends ConsumerState<BreedersListScreen> {
             margin: const EdgeInsets.only(right: 8),
           ),
           for (final o in ['Aktif', 'Istirahat', 'Siap Jual'])
-            chip(
-              '$o ${statusCount(o)}',
-              _statusFilter == o,
-              () => _statusFilter = _statusFilter == o ? 'Semua' : o,
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: AppFilterChip(
+                label: o,
+                count: statusCount(o),
+                selected: _statusFilter == o,
+                onTap: () => setState(
+                  () => _statusFilter = _statusFilter == o ? 'Semua' : o,
+                ),
+              ),
             ),
         ],
       ),

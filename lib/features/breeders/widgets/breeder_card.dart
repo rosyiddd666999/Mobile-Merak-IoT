@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../core/status_mapper.dart';
 import '../../../core/theme.dart';
 import '../../../data/models/breeder.dart';
+import '../../../shared/app_card.dart';
 import '../../../shared/design_kit.dart';
 
 /// Statistik performa per indukan, dihitung lokal dari list telur/anakan
@@ -30,79 +32,29 @@ class BreederCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isJantan = breeder.jenisKelamin == 'jantan';
-    final status = sold ? ('Terjual', AppStatus.ready) : _status(breeder.status);
+    final status = sold ? ('Terjual', AppStatus.ready) : StatusMapper.breeder(breeder.status);
     final nama = (breeder.nama?.isNotEmpty == true) ? breeder.nama! : breeder.id;
     final sub = '${breeder.generasi} · ${isJantan ? 'Jantan' : 'Betina'}';
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryTeal.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: breeder.fotoUrl != null && breeder.fotoUrl!.isNotEmpty
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(breeder.fotoUrl!, fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => _fallbackIcon(isJantan)),
-                      )
-                    : _fallbackIcon(isJantan),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            nama,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textDark,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        StatusChip(label: status.$1, status: status.$2),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      sub,
-                      style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _metrics(),
-                      style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 4),
-              const Icon(Icons.chevron_right, color: AppColors.textMuted),
-            ],
-          ),
-        ),
+    return AppRowCard(
+      onTap: onTap,
+      leading: AppLeadingBox(
+        child: breeder.fotoUrl != null && breeder.fotoUrl!.isNotEmpty
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(breeder.fotoUrl!, fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => _fallbackIcon(isJantan)),
+              )
+            : _fallbackIcon(isJantan),
+      ),
+      title: nama,
+      subtitle: sub,
+      trailing: StatusChip(label: status.$1, status: status.$2),
+      meta: Text(
+        _metrics(),
+        style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }
@@ -131,18 +83,5 @@ class BreederCard extends StatelessWidget {
     }
     if (parts.isEmpty) return '-';
     return parts.take(2).join(' · ');
-  }
-
-  (String, AppStatus) _status(String s) {
-    switch (s) {
-      case 'breeding':
-        return ('Aktif', AppStatus.active);
-      case 'resting':
-        return ('Istirahat', AppStatus.pending);
-      case 'ready_for_sale':
-        return ('Siap Jual', AppStatus.ready);
-      default:
-        return (s.isEmpty ? '-' : s, AppStatus.neutral);
-    }
   }
 }

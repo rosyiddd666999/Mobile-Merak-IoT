@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/app_routes.dart';
 import '../../core/theme.dart';
-import '../../core/utils/api_error.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../data/models/egg.dart';
 import '../../data/providers/auth_provider.dart';
 import '../../data/providers/breeders_provider.dart';
 import '../../data/providers/chicks_provider.dart';
 import '../../data/providers/eggs_provider.dart';
+import '../../shared/async_state_view.dart';
 import '../../shared/design_kit.dart';
-import '../../shared/loading_widget.dart';
-import '../../shared/error_widget.dart';
 import '../../shared/root_app_bar.dart';
 import 'widgets/egg_card.dart';
 
@@ -41,7 +40,7 @@ class EggsListScreen extends ConsumerWidget {
       appBar: const RootAppBar(title: 'Telur'),
       floatingActionButton: canCreate
           ? FloatingActionButton(
-              onPressed: () => context.push('/eggs/new'),
+              onPressed: () => context.push(AppRoutes.eggNew),
               backgroundColor: AppColors.darkCard,
               child: const Icon(Icons.add, color: Colors.white),
             )
@@ -65,7 +64,7 @@ class EggsListScreen extends ConsumerWidget {
                   child: _LatestActivityCard(
                     eggs: latest.take(3).toList(),
                     names: names,
-                    onOpen: (id) => context.push('/eggs/$id'),
+                    onOpen: (id) => context.push(AppRoutes.eggDetail(id)),
                   ),
                 );
               },
@@ -73,39 +72,26 @@ class EggsListScreen extends ConsumerWidget {
             ),
             const SectionHeader(title: 'Data Telur'),
             const SizedBox(height: 12),
-            eggsAsync.when(
-              loading: () =>
-                  const LoadingWidget(message: 'Memuat data telur...'),
-              error: (err, _) => AppErrorWidget(
-                message: friendlyApiError(err),
-                onRetry: () => ref.refresh(eggsListProvider),
-              ),
-              data: (eggs) {
-                if (eggs.isEmpty) {
-                  return const Card(
-                    margin: EdgeInsets.zero,
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: EmptyState(
-                        icon: Icons.egg_outlined,
-                        message: 'Belum ada data telur',
+            AsyncStateView(
+              async: eggsAsync,
+              loadingMessage: 'Memuat data telur...',
+              emptyIcon: Icons.egg_outlined,
+              emptyMessage: 'Belum ada data telur',
+              onRetry: () => ref.refresh(eggsListProvider),
+              isEmpty: (eggs) => eggs.isEmpty,
+              dataBuilder: (eggs) => Column(
+                children: [
+                  for (final egg in eggs)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: EggCard(
+                        egg: egg,
+                        onTap: () =>
+                            context.push(AppRoutes.eggDetail(egg.id)),
                       ),
                     ),
-                  );
-                }
-                return Column(
-                  children: [
-                    for (final egg in eggs)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: EggCard(
-                          egg: egg,
-                          onTap: () => context.push('/eggs/${egg.id}'),
-                        ),
-                      ),
-                  ],
-                );
-              },
+                ],
+              ),
             ),
             const SizedBox(height: 20),
             const SectionHeader(title: 'Anakan'),
@@ -135,7 +121,7 @@ class EggsListScreen extends ConsumerWidget {
                   ),
                 ),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () => context.push('/chicks'),
+                onTap: () => context.push(AppRoutes.chicks),
               ),
             ),
           ],

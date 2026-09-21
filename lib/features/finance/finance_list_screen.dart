@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/app_routes.dart';
 import '../../core/theme.dart';
-import '../../core/utils/api_error.dart';
 import '../../core/utils/number_formatter.dart';
 import '../../data/models/finance_entry.dart';
 import '../../data/providers/finance_provider.dart';
 import '../../data/providers/breeders_provider.dart';
 import '../../data/providers/auth_provider.dart';
+import '../../shared/async_state_view.dart';
 import '../../shared/design_kit.dart';
-import '../../shared/loading_widget.dart';
-import '../../shared/error_widget.dart';
 import '../../shared/root_app_bar.dart';
 import 'widgets/finance_entry_card.dart';
 
@@ -31,21 +30,21 @@ class FinanceListScreen extends ConsumerWidget {
       appBar: const RootAppBar(title: 'Keuangan'),
       floatingActionButton: canCreate
           ? FloatingActionButton(
-              onPressed: () => context.push('/finance/new'),
+              onPressed: () => context.push(AppRoutes.financeNew),
               backgroundColor: AppColors.darkCard,
               child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
       body: RefreshIndicator(
         onRefresh: () => ref.refresh(financeListProvider.future),
-        child: financeAsync.when(
-          loading: () =>
-              const LoadingWidget(message: 'Memuat data keuangan...'),
-          error: (err, _) => AppErrorWidget(
-            message: friendlyApiError(err),
-            onRetry: () => ref.refresh(financeListProvider),
-          ),
-          data: (entries) {
+        child: AsyncStateView(
+          async: financeAsync,
+          loadingMessage: 'Memuat data keuangan...',
+          emptyIcon: Icons.receipt_long_outlined,
+          emptyMessage: 'Belum ada data keuangan',
+          onRetry: () => ref.refresh(financeListProvider),
+          isEmpty: (entries) => entries.isEmpty,
+          dataBuilder: (entries) {
             final masuk = entries
                 .where((e) => e.tipe.toLowerCase() == 'pemasukan')
                 .fold<double>(0, (s, e) => s + e.jumlah);
@@ -97,10 +96,10 @@ class FinanceListScreen extends ConsumerWidget {
                         return _ProductCard(
                           title: (b.nama?.isNotEmpty == true) ? b.nama! : b.id,
                           subtitle: '${b.generasi} · ${b.varianWarna}',
-                          onTap: () => context.push('/breeders/${b.id}'),
+                          onTap: () => context.push(AppRoutes.breederDetail(b.id)),
                           onSph: () => context.push(
                             Uri(
-                              path: '/sales/new',
+                              path: AppRoutes.saleNew,
                               queryParameters: {
                                 'item': 'Indukan ${b.nama ?? b.id}',
                                 'ref': b.id,
@@ -129,7 +128,7 @@ class FinanceListScreen extends ConsumerWidget {
                   ...entries.map(
                     (FinanceEntry e) => FinanceEntryCard(
                       entry: e,
-                      onTap: () => context.push('/finance/${e.id}'),
+                      onTap: () => context.push(AppRoutes.financeDetail(e.id)),
                     ),
                   ),
                 const SizedBox(height: 20),

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/status_mapper.dart';
 import '../../core/theme.dart';
-import '../../core/utils/api_error.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/number_formatter.dart';
 import '../../data/providers/sales_provider.dart';
-import '../../shared/loading_widget.dart';
-import '../../shared/error_widget.dart';
+import '../../shared/async_state_view.dart';
+import '../../shared/design_kit.dart';
 import '../../shared/detail_app_bar.dart';
+import '../../shared/detail_section.dart';
 
 class SaleDetailScreen extends ConsumerWidget {
   final String id;
@@ -20,15 +21,12 @@ class SaleDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: const DetailAppBar(title: 'Detail Penjualan'),
-      body: saleAsync.when(
-        loading: () => const LoadingWidget(),
-        error: (err, _) => AppErrorWidget(
-          message: friendlyApiError(err),
-          onRetry: () => ref.refresh(saleDetailProvider(id)),
-        ),
-        data: (sale) {
+      body: AsyncStateView(
+        async: saleAsync,
+        onRetry: () => ref.refresh(saleDetailProvider(id)),
+        dataBuilder: (sale) {
           final total = sale.qty * sale.hargaSatuan;
-          final statusColor = _statusColor(sale.status);
+          final status = StatusMapper.sale(sale.status);
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -61,21 +59,7 @@ class SaleDetailScreen extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: statusColor.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              sale.status,
-                              style: TextStyle(
-                                color: statusColor,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
+                          StatusChip(label: status.$1, status: status.$2),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -105,33 +89,32 @@ class SaleDetailScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              _sectionTitle(context, 'Informasi'),
-              Card(
-                child: Column(
-                  children: [
-                    _infoRow(Icons.calendar_today, 'Tanggal', formatDate(sale.tanggal)),
-                    _divider(),
-                    _infoRow(Icons.person_outline, 'Pembeli', sale.pembeli),
-                    _divider(),
-                    _infoRow(Icons.numbers, 'Qty', '${sale.qty}'),
-                    _divider(),
-                    _infoRow(Icons.payments_outlined, 'Harga Satuan', formatRupiah(sale.hargaSatuan)),
-                    if (sale.referensiId.isNotEmpty) ...[
-                      _divider(),
-                      _infoRow(Icons.link, 'Referensi ID', sale.referensiId),
-                    ],
-                  ],
-                ),
-              ),
-              if (sale.catatan != null && sale.catatan!.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                _sectionTitle(context, 'Catatan'),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(sale.catatan!, style: const TextStyle(fontSize: 14, height: 1.5)),
+              DetailSection(
+                title: 'Informasi',
+                children: [
+                  Card(
+                    margin: EdgeInsets.zero,
+                    child: Column(
+                      children: [
+                        DetailRow(icon: Icons.calendar_today, label: 'Tanggal', value: formatDate(sale.tanggal)),
+                        const DetailDivider(),
+                        DetailRow(icon: Icons.person_outline, label: 'Pembeli', value: sale.pembeli),
+                        const DetailDivider(),
+                        DetailRow(icon: Icons.numbers, label: 'Qty', value: '${sale.qty}'),
+                        const DetailDivider(),
+                        DetailRow(icon: Icons.payments_outlined, label: 'Harga Satuan', value: formatRupiah(sale.hargaSatuan)),
+                        if (sale.referensiId.isNotEmpty) ...[
+                          const DetailDivider(),
+                          DetailRow(icon: Icons.link, label: 'Referensi ID', value: sale.referensiId),
+                        ],
+                      ],
+                    ),
                   ),
-                ),
+                ],
+              ),
+              if (sale.catatan != null && sale.catatan!.trim().isNotEmpty) ...[
+                const SizedBox(height: 16),
+                DetailNote(sale.catatan),
               ],
               const SizedBox(height: 24),
               OutlinedButton.icon(
@@ -144,49 +127,5 @@ class SaleDetailScreen extends ConsumerWidget {
         },
       ),
     );
-  }
-
-  Widget _sectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: AppColors.primaryDark,
-        ),
-      ),
-    );
-  }
-
-  Widget _infoRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: AppColors.textSecondary),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-          ),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-        ],
-      ),
-    );
-  }
-
-  Widget _divider() => const Divider(height: 1, thickness: 0.5);
-
-  Color _statusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'lunas':
-        return AppColors.success;
-      case 'dp':
-        return AppColors.warning;
-      case 'booking':
-        return AppColors.info;
-      default:
-        return AppColors.textSecondary;
-    }
   }
 }

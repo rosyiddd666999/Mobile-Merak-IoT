@@ -1,3 +1,10 @@
+/// Validator wajib-isi generik — pesan disamakan 'Wajib diisi' agar UX konsisten.
+/// Gantikan inline `(v == null || v.trim().isEmpty) ? 'Wajib diisi' : null`.
+String? validateRequired(String? value) {
+  if (value == null || value.trim().isEmpty) return 'Wajib diisi';
+  return null;
+}
+
 String? requiredField(String? value, String fieldName) {
   if (value == null || value.trim().isEmpty) {
     return '$fieldName tidak boleh kosong';

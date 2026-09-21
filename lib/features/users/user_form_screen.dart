@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 import '../../core/utils/api_error.dart';
 import '../../core/utils/id_generator.dart';
+import '../../core/utils/validators.dart';
 import '../../data/providers/dashboard_provider.dart';
 import '../../data/providers/users_provider.dart';
+import '../../shared/app_form.dart';
 import '../../shared/detail_app_bar.dart';
 
 class UserFormScreen extends ConsumerStatefulWidget {
@@ -101,32 +103,28 @@ class _UserFormScreenState extends ConsumerState<UserFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _label('ID Pengguna *'),
+              const AppLabel('ID Pengguna *'),
               TextFormField(
                 controller: _idController,
                 decoration: const InputDecoration(hintText: 'USR-001'),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+                validator: validateRequired,
               ),
               const SizedBox(height: 16),
-              _label('Nama *'),
+              const AppLabel('Nama *'),
               TextFormField(
                 controller: _namaController,
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+                validator: validateRequired,
               ),
               const SizedBox(height: 16),
-              _label('Email *'),
+              const AppLabel('Email *'),
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(hintText: 'user@example.com'),
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Wajib diisi';
-                  if (!v.contains('@')) return 'Email tidak valid';
-                  return null;
-                },
+                validator: validateEmail,
               ),
               const SizedBox(height: 16),
-              _label('Password *'),
+              const AppLabel('Password *'),
               TextFormField(
                 controller: _passwordController,
                 obscureText: _obscure,
@@ -136,14 +134,10 @@ class _UserFormScreenState extends ConsumerState<UserFormScreen> {
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
                 ),
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'Wajib diisi';
-                  if (v.length < 6) return 'Minimal 6 karakter';
-                  return null;
-                },
+                validator: validatePassword,
               ),
               const SizedBox(height: 16),
-              _label('Role *'),
+              const AppLabel('Role *'),
               DropdownButtonFormField<String>(
                 initialValue: _role,
                 items: const [
@@ -167,10 +161,4 @@ class _UserFormScreenState extends ConsumerState<UserFormScreen> {
     );
   }
 
-  Widget _label(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-    );
-  }
 }
