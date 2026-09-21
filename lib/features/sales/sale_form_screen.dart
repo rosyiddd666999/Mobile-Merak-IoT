@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 import '../../core/utils/api_error.dart';
-import '../../core/utils/date_formatter.dart';
 import '../../core/utils/id_generator.dart';
 import '../../core/utils/validators.dart';
 import '../../data/models/sale.dart';
@@ -55,16 +54,6 @@ class _SaleFormScreenState extends ConsumerState<SaleFormScreen> {
     _hargaController.dispose();
     _catatanController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _tanggal,
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) setState(() => _tanggal = picked);
   }
 
   Future<void> _save() async {
@@ -150,28 +139,17 @@ class _SaleFormScreenState extends ConsumerState<SaleFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const AppLabel('ID Penjualan *'),
-              TextFormField(
+              AppTextField(
+                label: 'ID Penjualan *',
                 controller: _idController,
-                decoration: const InputDecoration(hintText: 'SLS-001'),
                 validator: validateRequired,
+                hint: 'SLS-001',
               ),
-              const SizedBox(height: 16),
-              const AppLabel('Tanggal *'),
-              InkWell(
-                onTap: _pickDate,
-                child: InputDecorator(
-                  decoration: const InputDecoration(),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.calendar_today, size: 18, color: AppColors.textSecondary),
-                      const SizedBox(width: 8),
-                      Text(formatDate(_tanggal.toIso8601String())),
-                    ],
-                  ),
-                ),
+              DatePickerField(
+                label: 'Tanggal *',
+                value: _tanggal,
+                onChanged: (v) => setState(() => _tanggal = v),
               ),
-              const SizedBox(height: 16),
               const AppLabel('Jenis *'),
               DropdownButtonFormField<String>(
                 initialValue: _jenis,
@@ -185,13 +163,12 @@ class _SaleFormScreenState extends ConsumerState<SaleFormScreen> {
                 }),
               ),
               const SizedBox(height: 16),
-              const AppLabel('Item *'),
-              TextFormField(
+              AppTextField(
+                label: 'Item *',
                 controller: _itemController,
-                decoration: const InputDecoration(hintText: 'Anakan merak biru'),
                 validator: validateRequired,
+                hint: 'Anakan merak biru',
               ),
-              const SizedBox(height: 16),
               const AppLabel('Referensi ID'),
               _referensiDropdown(),
               const SizedBox(height: 8),
@@ -201,14 +178,13 @@ class _SaleFormScreenState extends ConsumerState<SaleFormScreen> {
                 label: const Text('Isi item dari referensi'),
               ),
               const SizedBox(height: 16),
-              const AppLabel('Pembeli *'),
-              TextFormField(
+              AppTextField(
+                label: 'Pembeli *',
                 controller: _pembeliController,
                 validator: validateRequired,
               ),
-              const SizedBox(height: 16),
-              const AppLabel('Qty *'),
-              TextFormField(
+              AppTextField(
+                label: 'Qty *',
                 controller: _qtyController,
                 keyboardType: TextInputType.number,
                 validator: (v) {
@@ -218,9 +194,8 @@ class _SaleFormScreenState extends ConsumerState<SaleFormScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
-              const AppLabel('Harga Satuan (Rp) *'),
-              TextFormField(
+              AppTextField(
+                label: 'Harga Satuan (Rp) *',
                 controller: _hargaController,
                 keyboardType: TextInputType.number,
                 validator: (v) {
@@ -230,7 +205,6 @@ class _SaleFormScreenState extends ConsumerState<SaleFormScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
               const AppLabel('Status *'),
               DropdownButtonFormField<String>(
                 initialValue: _status,
@@ -242,19 +216,12 @@ class _SaleFormScreenState extends ConsumerState<SaleFormScreen> {
                 onChanged: (v) => setState(() => _status = v!),
               ),
               const SizedBox(height: 16),
-              const AppLabel('Catatan'),
-              TextFormField(
+              AppTextField(
+                label: 'Catatan',
                 controller: _catatanController,
                 maxLines: 3,
               ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: _isSaving ? null : _save,
-                icon: _isSaving
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.save),
-                label: const Text('Simpan'),
-              ),
+              SaveButton(isSaving: _isSaving, onPressed: _save),
             ],
           ),
         ),

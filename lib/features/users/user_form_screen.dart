@@ -103,27 +103,24 @@ class _UserFormScreenState extends ConsumerState<UserFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const AppLabel('ID Pengguna *'),
-              TextFormField(
+              AppTextField(
+                label: 'ID Pengguna *',
                 controller: _idController,
-                decoration: const InputDecoration(hintText: 'USR-001'),
                 validator: validateRequired,
+                hint: 'USR-001',
               ),
-              const SizedBox(height: 16),
-              const AppLabel('Nama *'),
-              TextFormField(
+              AppTextField(
+                label: 'Nama *',
                 controller: _namaController,
                 validator: validateRequired,
               ),
-              const SizedBox(height: 16),
-              const AppLabel('Email *'),
-              TextFormField(
+              AppTextField(
+                label: 'Email *',
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(hintText: 'user@example.com'),
                 validator: validateEmail,
+                hint: 'user@example.com',
               ),
-              const SizedBox(height: 16),
               const AppLabel('Password *'),
               TextFormField(
                 controller: _passwordController,
@@ -146,14 +143,8 @@ class _UserFormScreenState extends ConsumerState<UserFormScreen> {
                 ],
                 onChanged: (v) => setState(() => _role = v!),
               ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: _isSaving ? null : _save,
-                icon: _isSaving
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.save),
-                label: const Text('Simpan'),
-              ),
+              const SizedBox(height: 16),
+              SaveButton(isSaving: _isSaving, onPressed: _save),
             ],
           ),
         ),

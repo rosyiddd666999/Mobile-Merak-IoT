@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 import '../../core/utils/api_error.dart';
-import '../../core/utils/date_formatter.dart';
 import '../../core/utils/id_generator.dart';
 import '../../core/utils/validators.dart';
 import '../../data/models/breeder.dart';
@@ -72,16 +71,6 @@ class _FinanceFormScreenState extends ConsumerState<FinanceFormScreen> {
     _catatanController.dispose();
     _pembeliController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _tanggal,
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) setState(() => _tanggal = picked);
   }
 
   Future<void> _save() async {
@@ -197,28 +186,17 @@ class _FinanceFormScreenState extends ConsumerState<FinanceFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const AppLabel('ID Entri *'),
-              TextFormField(
+              AppTextField(
+                label: 'ID Entri *',
                 controller: _idController,
-                decoration: const InputDecoration(hintText: 'FIN-001'),
                 validator: validateRequired,
+                hint: 'FIN-001',
               ),
-              const SizedBox(height: 16),
-              const AppLabel('Tanggal *'),
-              InkWell(
-                onTap: _pickDate,
-                child: InputDecorator(
-                  decoration: const InputDecoration(),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.calendar_today, size: 18, color: AppColors.textSecondary),
-                      const SizedBox(width: 8),
-                      Text(formatDate(_tanggal.toIso8601String())),
-                    ],
-                  ),
-                ),
+              DatePickerField(
+                label: 'Tanggal *',
+                value: _tanggal,
+                onChanged: (v) => setState(() => _tanggal = v),
               ),
-              const SizedBox(height: 16),
               const AppLabel('Tipe *'),
               DropdownButtonFormField<String>(
                 initialValue: _tipe,
@@ -259,16 +237,16 @@ class _FinanceFormScreenState extends ConsumerState<FinanceFormScreen> {
                 const AppLabel('Referensi Terjual *'),
                 _referensiDropdown(eggsAsync, chicksAsync, breedersAsync),
                 const SizedBox(height: 16),
-                const AppLabel('Pembeli *'),
-                TextFormField(
+                AppTextField(
+                  label: 'Pembeli *',
                   controller: _pembeliController,
-                  decoration: const InputDecoration(hintText: 'Nama pembeli'),
                   validator: validateRequired,
+                  hint: 'Nama pembeli',
                 ),
               ],
               const SizedBox(height: 16),
-              const AppLabel('Jumlah (Rp) *'),
-              TextFormField(
+              AppTextField(
+                label: 'Jumlah (Rp) *',
                 controller: _jumlahController,
                 keyboardType: TextInputType.number,
                 validator: (v) {
@@ -278,20 +256,12 @@ class _FinanceFormScreenState extends ConsumerState<FinanceFormScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
-              const AppLabel('Catatan'),
-              TextFormField(
+              AppTextField(
+                label: 'Catatan',
                 controller: _catatanController,
                 maxLines: 3,
               ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: _isSaving ? null : _save,
-                icon: _isSaving
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.save),
-                label: const Text('Simpan'),
-              ),
+              SaveButton(isSaving: _isSaving, onPressed: _save),
             ],
           ),
         ),

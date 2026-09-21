@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 import '../../core/utils/api_error.dart';
-import '../../core/utils/date_formatter.dart';
 import '../../core/utils/silsilah.dart';
 import '../../core/utils/validators.dart';
 import '../../data/models/chick.dart';
@@ -73,16 +72,6 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
     if (_suffixController.text.isNotEmpty) return;
     final next = nextNomorChick(chicks.map((e) => e.id).toList(), _eggId!);
     setState(() => _suffixController.text = pad2(next));
-  }
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _tanggalMenetas,
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) setState(() => _tanggalMenetas = picked);
   }
 
   Future<void> _save() async {
@@ -274,23 +263,13 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const AppLabel('Tanggal Menetas *'),
-            InkWell(
-              onTap: _pickDate,
-              child: InputDecorator(
-                decoration: const InputDecoration(),
-                child: Row(
-                  children: [
-                    const Icon(Icons.calendar_today, size: 18, color: AppColors.textSecondary),
-                    const SizedBox(width: 8),
-                    Text(formatDate(_tanggalMenetas.toIso8601String())),
-                  ],
-                ),
-              ),
+            DatePickerField(
+              label: 'Tanggal Menetas *',
+              value: _tanggalMenetas,
+              onChanged: (d) => setState(() => _tanggalMenetas = d),
             ),
-            const SizedBox(height: 16),
-            const AppLabel('Berat Awal (gram) *'),
-            TextFormField(
+            AppTextField(
+              label: 'Berat Awal (gram) *',
               controller: _beratController,
               keyboardType: TextInputType.number,
               validator: (v) {
@@ -300,13 +279,11 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
                 return null;
               },
             ),
-            const SizedBox(height: 16),
-            const AppLabel('Skor Kesehatan *'),
-            TextFormField(
+            AppTextField(
+              label: 'Skor Kesehatan *',
               controller: _skorController,
               validator: validateRequired,
             ),
-            const SizedBox(height: 16),
             const AppLabel('Status *'),
             DropdownButtonFormField<String>(
               initialValue: _status,
@@ -319,19 +296,13 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
               onChanged: (v) => setState(() => _status = v!),
             ),
             const SizedBox(height: 16),
-            const AppLabel('Catatan'),
-            TextFormField(controller: _catatanController, maxLines: 3),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _isSaving ? null : _save,
-              icon: _isSaving
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Icon(Icons.save),
-              label: Text(widget.isEdit ? 'Simpan Perubahan' : 'Simpan'),
+            AppTextField(
+              label: 'Catatan',
+              controller: _catatanController,
+              maxLines: 3,
             ),
+            const SizedBox(height: 24),
+            SaveButton(isSaving: _isSaving, isEdit: widget.isEdit, onPressed: _save),
           ],
         ),
       ),

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 import '../../core/utils/api_error.dart';
-import '../../core/utils/date_formatter.dart';
 import '../../core/utils/silsilah.dart';
 import '../../core/utils/validators.dart';
 import '../../data/models/breeder.dart';
@@ -75,16 +74,6 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
       final m = RegExp(r'^(JB|BB)(\d+)$').firstMatch(b.id);
       _suffixController.text = m?.group(2) ?? '';
     }
-  }
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _tanggalLahir ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) setState(() => _tanggalLahir = picked);
   }
 
   Future<void> _save() async {
@@ -284,42 +273,27 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const AppLabel('Nama'),
-            TextFormField(
+            AppTextField(
+              label: 'Nama',
               controller: _namaController,
-              decoration: const InputDecoration(hintText: 'Opsional'),
+              hint: 'Opsional',
             ),
-            const SizedBox(height: 16),
-            const AppLabel('Tanggal Lahir'),
-            InkWell(
-              onTap: _pickDate,
-              child: InputDecorator(
-                decoration: const InputDecoration(),
-                child: Row(
-                  children: [
-                    const Icon(Icons.calendar_today, size: 18, color: AppColors.textSecondary),
-                    const SizedBox(width: 8),
-                    Text(_tanggalLahir == null
-                        ? 'Pilih tanggal'
-                        : formatDate(_tanggalLahir!.toIso8601String())),
-                  ],
-                ),
-              ),
+            DatePickerField(
+              label: 'Tanggal Lahir',
+              value: _tanggalLahir ?? DateTime.now(),
+              onChanged: (d) => setState(() => _tanggalLahir = d),
             ),
-            const SizedBox(height: 16),
-            const AppLabel('Generasi *'),
-            TextFormField(
+            AppTextField(
+              label: 'Generasi *',
               controller: _generasiController,
               validator: validateRequired,
             ),
-            const SizedBox(height: 16),
-            const AppLabel('Varian Warna *'),
-            TextFormField(
+            AppTextField(
+              label: 'Varian Warna *',
               controller: _varianWarnaController,
-              decoration: const InputDecoration(hintText: 'Hijau / Biru / Putih'),
               validator: validateRequired,
+              hint: 'Hijau / Biru / Putih',
             ),
-            const SizedBox(height: 16),
             const AppLabel('Asal *'),
             DropdownButtonFormField<String>(
               initialValue: _asal,
@@ -341,16 +315,7 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
               onChanged: (v) => setState(() => _status = v!),
             ),
             const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _isSaving ? null : _save,
-              icon: _isSaving
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Icon(Icons.save),
-              label: Text(widget.isEdit ? 'Simpan Perubahan' : 'Simpan'),
-            ),
+            SaveButton(isSaving: _isSaving, isEdit: widget.isEdit, onPressed: _save),
           ],
         ),
       ),

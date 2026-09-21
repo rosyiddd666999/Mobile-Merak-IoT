@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 import '../../core/utils/api_error.dart';
-import '../../core/utils/date_formatter.dart';
 import '../../core/utils/silsilah.dart';
 import '../../core/utils/validators.dart';
 import '../../data/models/breeder.dart';
@@ -89,16 +88,6 @@ class _EggFormScreenState extends ConsumerState<EggFormScreen> {
       _indukBetinaId!,
     );
     setState(() => _suffixController.text = pad2(next));
-  }
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _tanggalMasuk,
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null) setState(() => _tanggalMasuk = picked);
   }
 
   Future<void> _save() async {
@@ -377,25 +366,11 @@ class _EggFormScreenState extends ConsumerState<EggFormScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const AppLabel('Tanggal Masuk *'),
-            InkWell(
-              onTap: _pickDate,
-              child: InputDecorator(
-                decoration: const InputDecoration(),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.calendar_today,
-                      size: 18,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(formatDate(_tanggalMasuk.toIso8601String())),
-                  ],
-                ),
-              ),
+            DatePickerField(
+              label: 'Tanggal Masuk *',
+              value: _tanggalMasuk,
+              onChanged: (d) => setState(() => _tanggalMasuk = d),
             ),
-            const SizedBox(height: 16),
             const AppLabel('Fertilitas *'),
             DropdownButtonFormField<String>(
               key: ValueKey('fertilitas-$_fertilitas'),
@@ -473,23 +448,13 @@ class _EggFormScreenState extends ConsumerState<EggFormScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const AppLabel('Catatan'),
-            TextFormField(controller: _catatanController, maxLines: 3),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _isSaving ? null : _save,
-              icon: _isSaving
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.save),
-              label: Text(widget.isEdit ? 'Simpan Perubahan' : 'Simpan'),
+            AppTextField(
+              label: 'Catatan',
+              controller: _catatanController,
+              maxLines: 3,
             ),
+            const SizedBox(height: 24),
+            SaveButton(isSaving: _isSaving, isEdit: widget.isEdit, onPressed: _save),
           ],
         ),
       ),
