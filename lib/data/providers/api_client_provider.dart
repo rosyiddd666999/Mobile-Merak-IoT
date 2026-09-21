@@ -1,9 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../core/config.dart';
 import '../../core/constants.dart';
 import 'auth_provider.dart';
+
+part 'api_client_provider.g.dart';
 
 // Preload dari flutter_secure_storage saat splash/login (MOBILE.md §7.1).
 // Interceptor baca state sinkron — jangan baca storage async di onRequest.
@@ -19,7 +22,8 @@ String _effectiveApiKey(Ref ref) {
   return '';
 }
 
-final apiClientProvider = Provider<Dio>((ref) {
+@Riverpod(keepAlive: true)
+Dio apiClient(Ref ref) {
   final dio = Dio(BaseOptions(
     // Runtime (.env) dulu, fallback dart-define — agar `flutter run` biasa benar.
     baseUrl: AppConstants.baseUrl,
@@ -57,7 +61,7 @@ final apiClientProvider = Provider<Dio>((ref) {
   ));
 
   return dio;
-});
+}
 
 void _logDioError(DioException err) {
   final method = err.requestOptions.method;

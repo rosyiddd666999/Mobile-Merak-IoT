@@ -1,11 +1,17 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/breeder.dart';
 import '../models/breeder_lineage.dart';
 import '../models/breeder_compare_item.dart';
 import 'api_client_provider.dart';
 
-final breedersListProvider = FutureProvider<List<Breeder>>((ref) async {
+part 'breeders_provider.g.dart';
+
+@Riverpod(keepAlive: true)
+Future<List<Breeder>> breedersList(Ref ref) async {
   final dio = ref.read(apiClientProvider);
   try {
     final response = await dio.get('/api/breeders');
@@ -13,9 +19,10 @@ final breedersListProvider = FutureProvider<List<Breeder>>((ref) async {
   } on DioException {
     rethrow;
   }
-});
+}
 
-final breederDetailProvider = FutureProvider.family<Breeder, String>((ref, id) async {
+@Riverpod(keepAlive: true)
+Future<Breeder> breederDetail(Ref ref, String id) async {
   final dio = ref.read(apiClientProvider);
   try {
     final response = await dio.get('/api/breeders/$id');
@@ -23,9 +30,10 @@ final breederDetailProvider = FutureProvider.family<Breeder, String>((ref, id) a
   } on DioException {
     rethrow;
   }
-});
+}
 
-final breederLineageProvider = FutureProvider.family<BreederLineage, String>((ref, id) async {
+@Riverpod(keepAlive: true)
+Future<BreederLineage> breederLineage(Ref ref, String id) async {
   final dio = ref.read(apiClientProvider);
   try {
     final response = await dio.get('/api/breeders/$id/lineage');
@@ -33,21 +41,27 @@ final breederLineageProvider = FutureProvider.family<BreederLineage, String>((re
   } on DioException {
     rethrow;
   }
-});
+}
 
-final breederCompareProvider = FutureProvider.family<List<BreederCompareItem>, List<String>>((ref, ids) async {
+@Riverpod(keepAlive: true)
+Future<List<BreederCompareItem>> breederCompare(
+    Ref ref, List<String> ids) async {
   final dio = ref.read(apiClientProvider);
   try {
-    final response = await dio.get('/api/breeders/compare', queryParameters: {'ids': ids.join(',')});
-    return (response.data as List).map((e) => BreederCompareItem.fromJson(e)).toList();
+    final response = await dio.get('/api/breeders/compare',
+        queryParameters: {'ids': ids.join(',')});
+    return (response.data as List)
+        .map((e) => BreederCompareItem.fromJson(e))
+        .toList();
   } on DioException {
     rethrow;
   }
-});
+}
 
-class BreederCreateNotifier extends AsyncNotifier<Breeder?> {
+@Riverpod(keepAlive: true)
+class BreederCreate extends _$BreederCreate {
   @override
-  Future<Breeder?> build() async => null;
+  FutureOr<Breeder?> build() => null;
 
   Future<Breeder?> create(Breeder breeder) async {
     state = const AsyncLoading();
@@ -68,19 +82,19 @@ class BreederCreateNotifier extends AsyncNotifier<Breeder?> {
   }
 }
 
-final breederCreateProvider = AsyncNotifierProvider<BreederCreateNotifier, Breeder?>(
-  BreederCreateNotifier.new,
-);
+// Alias nama lama agar call-site tidak berubah.
 
-class BreederUpdateNotifier extends AsyncNotifier<Breeder?> {
+@Riverpod(keepAlive: true)
+class BreederUpdate extends _$BreederUpdate {
   @override
-  Future<Breeder?> build() async => null;
+  FutureOr<Breeder?> build() => null;
 
   Future<Breeder?> updateBreeder(String id, Breeder breeder) async {
     state = const AsyncLoading();
     final dio = ref.read(apiClientProvider);
     try {
-      final response = await dio.put('/api/breeders/$id', data: breeder.toJson());
+      final response =
+          await dio.put('/api/breeders/$id', data: breeder.toJson());
       final updated = Breeder.fromJson(response.data);
       state = AsyncData(updated);
       return updated;
@@ -95,13 +109,12 @@ class BreederUpdateNotifier extends AsyncNotifier<Breeder?> {
   }
 }
 
-final breederUpdateProvider = AsyncNotifierProvider<BreederUpdateNotifier, Breeder?>(
-  BreederUpdateNotifier.new,
-);
+// Alias nama lama agar call-site tidak berubah.
 
-class BreederDeleteNotifier extends AsyncNotifier<void> {
+@Riverpod(keepAlive: true)
+class BreederDelete extends _$BreederDelete {
   @override
-  Future<void> build() async {}
+  FutureOr<void> build() {}
 
   /// Hapus indukan. 404 = sudah hilang di server, tetap dianggap sukses.
   Future<void> deleteBreeder(String id) async {
@@ -124,6 +137,4 @@ class BreederDeleteNotifier extends AsyncNotifier<void> {
   }
 }
 
-final breederDeleteProvider = AsyncNotifierProvider<BreederDeleteNotifier, void>(
-  BreederDeleteNotifier.new,
-);
+// Alias nama lama agar call-site tidak berubah.

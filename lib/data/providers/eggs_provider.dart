@@ -1,9 +1,15 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/egg.dart';
 import 'api_client_provider.dart';
 
-final eggsListProvider = FutureProvider<List<Egg>>((ref) async {
+part 'eggs_provider.g.dart';
+
+@Riverpod(keepAlive: true)
+Future<List<Egg>> eggsList(Ref ref) async {
   final dio = ref.read(apiClientProvider);
   try {
     final response = await dio.get('/api/eggs');
@@ -11,9 +17,10 @@ final eggsListProvider = FutureProvider<List<Egg>>((ref) async {
   } on DioException {
     rethrow;
   }
-});
+}
 
-final eggDetailProvider = FutureProvider.family<Egg, String>((ref, id) async {
+@Riverpod(keepAlive: true)
+Future<Egg> eggDetail(Ref ref, String id) async {
   final dio = ref.read(apiClientProvider);
   try {
     final response = await dio.get('/api/eggs/$id');
@@ -21,11 +28,12 @@ final eggDetailProvider = FutureProvider.family<Egg, String>((ref, id) async {
   } on DioException {
     rethrow;
   }
-});
+}
 
-class EggCreateNotifier extends AsyncNotifier<Egg?> {
+@Riverpod(keepAlive: true)
+class EggCreate extends _$EggCreate {
   @override
-  Future<Egg?> build() async => null;
+  FutureOr<Egg?> build() => null;
 
   Future<Egg?> create(Egg egg) async {
     state = const AsyncLoading();
@@ -46,13 +54,12 @@ class EggCreateNotifier extends AsyncNotifier<Egg?> {
   }
 }
 
-final eggCreateProvider = AsyncNotifierProvider<EggCreateNotifier, Egg?>(
-  EggCreateNotifier.new,
-);
+// Alias nama lama agar call-site tidak berubah.
 
-class EggUpdateNotifier extends AsyncNotifier<Egg?> {
+@Riverpod(keepAlive: true)
+class EggUpdate extends _$EggUpdate {
   @override
-  Future<Egg?> build() async => null;
+  FutureOr<Egg?> build() => null;
 
   Future<Egg?> updateEgg(String id, Egg egg) async {
     state = const AsyncLoading();
@@ -73,13 +80,12 @@ class EggUpdateNotifier extends AsyncNotifier<Egg?> {
   }
 }
 
-final eggUpdateProvider = AsyncNotifierProvider<EggUpdateNotifier, Egg?>(
-  EggUpdateNotifier.new,
-);
+// Alias nama lama agar call-site tidak berubah.
 
-class EggDeleteNotifier extends AsyncNotifier<void> {
+@Riverpod(keepAlive: true)
+class EggDelete extends _$EggDelete {
   @override
-  Future<void> build() async {}
+  FutureOr<void> build() {}
 
   /// Hapus telur. 404 = sudah hilang di server, tetap dianggap sukses.
   Future<void> deleteEgg(String id) async {
@@ -102,6 +108,4 @@ class EggDeleteNotifier extends AsyncNotifier<void> {
   }
 }
 
-final eggDeleteProvider = AsyncNotifierProvider<EggDeleteNotifier, void>(
-  EggDeleteNotifier.new,
-);
+// Alias nama lama agar call-site tidak berubah.

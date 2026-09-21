@@ -2,12 +2,16 @@ import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/chick.dart';
 import '../models/dashboard_summary.dart';
 import '../models/egg.dart';
 import 'api_client_provider.dart';
 
-final dashboardProvider = FutureProvider<DashboardSummary>((ref) async {
+part 'dashboard_provider.g.dart';
+
+@Riverpod(keepAlive: true)
+Future<DashboardSummary> dashboard(Ref ref) async {
   final dio = ref.read(apiClientProvider);
   DashboardSummary? server;
   try {
@@ -44,7 +48,7 @@ final dashboardProvider = FutureProvider<DashboardSummary>((ref) async {
     financeSummary: server.financeSummary,
     isLocal: false,
   );
-});
+}
 
 /// Hitung lokal dari endpoint LIVE.
 /// Telur aktif = `akhir == Proses`; anakan bulan ini dari `tanggal_menetas`.

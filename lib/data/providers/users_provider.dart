@@ -1,9 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/user.dart';
 import 'api_client_provider.dart';
 
-final usersListProvider = FutureProvider<List<User>>((ref) async {
+part 'users_provider.g.dart';
+
+@Riverpod(keepAlive: true)
+Future<List<User>> usersList(Ref ref) async {
   final dio = ref.read(apiClientProvider);
   try {
     final response = await dio.get('/api/users');
@@ -11,9 +15,10 @@ final usersListProvider = FutureProvider<List<User>>((ref) async {
   } on DioException {
     rethrow;
   }
-});
+}
 
-class UserCreateNotifier extends AsyncNotifier<User?> {
+@Riverpod(keepAlive: true)
+class UserCreate extends _$UserCreate {
   @override
   Future<User?> build() async => null;
 
@@ -48,11 +53,8 @@ class UserCreateNotifier extends AsyncNotifier<User?> {
   }
 }
 
-final userCreateProvider = AsyncNotifierProvider<UserCreateNotifier, User?>(
-  UserCreateNotifier.new,
-);
-
-class UserDeleteNotifier extends AsyncNotifier<void> {
+@Riverpod(keepAlive: true)
+class UserDelete extends _$UserDelete {
   @override
   Future<void> build() async {}
 
@@ -76,7 +78,3 @@ class UserDeleteNotifier extends AsyncNotifier<void> {
     state = const AsyncData(null);
   }
 }
-
-final userDeleteProvider = AsyncNotifierProvider<UserDeleteNotifier, void>(
-  UserDeleteNotifier.new,
-);

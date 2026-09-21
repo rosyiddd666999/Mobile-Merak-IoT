@@ -1,9 +1,15 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/sale.dart';
 import 'api_client_provider.dart';
 
-final salesListProvider = FutureProvider<List<Sale>>((ref) async {
+part 'sales_provider.g.dart';
+
+@Riverpod(keepAlive: true)
+Future<List<Sale>> salesList(Ref ref) async {
   final dio = ref.read(apiClientProvider);
   try {
     final response = await dio.get('/api/sales');
@@ -11,9 +17,10 @@ final salesListProvider = FutureProvider<List<Sale>>((ref) async {
   } on DioException {
     rethrow;
   }
-});
+}
 
-final saleDetailProvider = FutureProvider.family<Sale, String>((ref, id) async {
+@Riverpod(keepAlive: true)
+Future<Sale> saleDetail(Ref ref, String id) async {
   final dio = ref.read(apiClientProvider);
   try {
     final response = await dio.get('/api/sales/$id');
@@ -21,11 +28,12 @@ final saleDetailProvider = FutureProvider.family<Sale, String>((ref, id) async {
   } on DioException {
     rethrow;
   }
-});
+}
 
-class SaleCreateNotifier extends AsyncNotifier<Sale?> {
+@Riverpod(keepAlive: true)
+class SaleCreate extends _$SaleCreate {
   @override
-  Future<Sale?> build() async => null;
+  FutureOr<Sale?> build() => null;
 
   Future<Sale?> create(Sale sale) async {
     state = const AsyncLoading();
@@ -46,6 +54,4 @@ class SaleCreateNotifier extends AsyncNotifier<Sale?> {
   }
 }
 
-final saleCreateProvider = AsyncNotifierProvider<SaleCreateNotifier, Sale?>(
-  SaleCreateNotifier.new,
-);
+// Alias nama lama agar call-site tidak berubah.

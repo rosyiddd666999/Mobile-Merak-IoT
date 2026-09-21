@@ -3,13 +3,15 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../core/constants.dart';
 import '../models/mqtt_config.dart';
 import '../models/telemetry_log.dart';
 import '../services/mqtt_service.dart';
 import 'api_client_provider.dart';
 import 'incubator_provider.dart';
+
+part 'mqtt_provider.g.dart';
 
 /// Topik subscribe (firmware ESP32, 6 topik incl. status_sensor
 /// + 4 topik ambang aktual untuk deteksi mismatch vs DB).
@@ -171,9 +173,8 @@ extension LampModePayload on LampMode {
   }
 }
 
-class MqttNotifier extends StateNotifier<MqttState>
-    with WidgetsBindingObserver {
-  final Ref _ref;
+@Riverpod(keepAlive: true)
+class Mqtt extends _$Mqtt with WidgetsBindingObserver {
   final MqttService _service = MqttService();
   bool _started = false;
   bool _connecting = false;
@@ -184,7 +185,8 @@ class MqttNotifier extends StateNotifier<MqttState>
   StreamSubscription<List<ConnectivityResult>>? _connSub;
   String _preferredTransport = 'native';
 
-  MqttNotifier(this._ref) : super(const MqttState()) {
+  @override
+  MqttState build() {
     WidgetsBinding.instance.addObserver(this);
     _service.onAutoReconnect = () {
       if (_disposed) return;
@@ -194,6 +196,8 @@ class MqttNotifier extends StateNotifier<MqttState>
       );
     };
     _listenConnectivity();
+    ref.onDispose(dispose);
+    return const MqttState();
   }
 
   /// Panggil dari dashboard/incubator sekali. Urutan config (MOBILE.md §7.4.1):
@@ -306,7 +310,7 @@ class MqttNotifier extends StateNotifier<MqttState>
     String? apiUrl;
     String credSource = 'ENV';
     try {
-      final cfg = await _ref.read(mqttConfigProvider.future);
+      final cfg = await ref.read(mqttConfigProvider.future);
       if (cfg is MqttConfig && cfg.isConfigured) {
         credSource = 'API';
         apiUrl = cfg.mqttUrl;
@@ -505,7 +509,7 @@ class MqttNotifier extends StateNotifier<MqttState>
     _lastDbSync = now;
     Future(() async {
       try {
-        final dio = _ref.read(apiClientProvider);
+        final dio = ref.read(apiClientProvider);
         await dio.post('/api/incubator/status', data: {
           'suhu_sekarang': state.temperature,
           'kelembapan_sekarang': state.humidity,
@@ -566,13 +570,13 @@ class MqttNotifier extends StateNotifier<MqttState>
     if (_disposed) return;
     state = state.copyWith(lastManualRotation: now);
     try {
-      final dio = _ref.read(apiClientProvider);
+      final dio = ref.read(apiClientProvider);
       await dio.post('/api/incubator/rotation-logs', data: {
         'status': 'sukses',
         'catatan': 'Manual via aplikasi mobile',
         'timestamp': now.toIso8601String(),
       });
-      _ref.invalidate(rotationLogsProvider);
+      ref.invalidate(rotationLogsProvider);
     } catch (_) {}
   }
 
@@ -618,7 +622,6 @@ class MqttNotifier extends StateNotifier<MqttState>
     await reconnect();
   }
 
-  @override
   void dispose() {
     _disposed = true;
     _started = false;
@@ -626,12 +629,5 @@ class MqttNotifier extends StateNotifier<MqttState>
     _watchdog?.cancel();
     _connSub?.cancel();
     _service.dispose();
-    super.dispose();
   }
 }
-
-final mqttProvider = StateNotifierProvider<MqttNotifier, MqttState>((ref) {
-  final n = MqttNotifier(ref);
-  ref.onDispose(n.dispose);
-  return n;
-});

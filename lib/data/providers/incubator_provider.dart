@@ -1,11 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/incubator_status.dart';
 import '../models/incubator_settings.dart';
 import '../models/mqtt_config.dart';
 import '../models/telemetry_log.dart';
 import '../models/rotation_log.dart';
 import 'api_client_provider.dart';
+
+part 'incubator_provider.g.dart';
 
 IncubatorSettings _defaultSettings() => IncubatorSettings(
       id: 1,
@@ -18,7 +21,8 @@ IncubatorSettings _defaultSettings() => IncubatorSettings(
 
 /// Live: GET /api/incubator/settings saat ini me-return MqttConfig
 /// {mqtt_url, mqtt_username, mqtt_password, status} (MOBILE.md §4.5/§7.4).
-final mqttConfigProvider = FutureProvider<MqttConfig?>((ref) async {
+@Riverpod(keepAlive: true)
+Future<MqttConfig?> mqttConfig(Ref ref) async {
   final dio = ref.read(apiClientProvider);
   try {
     final response = await dio.get('/api/incubator/settings');
@@ -31,9 +35,10 @@ final mqttConfigProvider = FutureProvider<MqttConfig?>((ref) async {
     if (e.response?.statusCode == 404) return null;
     rethrow;
   }
-});
+}
 
-final incubatorStatusProvider = FutureProvider<IncubatorStatus?>((ref) async {
+@Riverpod(keepAlive: true)
+Future<IncubatorStatus?> incubatorStatus(Ref ref) async {
   final dio = ref.read(apiClientProvider);
   try {
     final response = await dio.get('/api/incubator/status');
@@ -53,9 +58,10 @@ final incubatorStatusProvider = FutureProvider<IncubatorStatus?>((ref) async {
   } catch (_) {
     return null;
   }
-});
+}
 
-final incubatorSettingsProvider = FutureProvider<IncubatorSettings>((ref) async {
+@Riverpod(keepAlive: true)
+Future<IncubatorSettings> incubatorSettings(Ref ref) async {
   final dio = ref.read(apiClientProvider);
   try {
     final response = await dio.get('/api/incubator/settings');
@@ -77,13 +83,14 @@ final incubatorSettingsProvider = FutureProvider<IncubatorSettings>((ref) async 
     if (e.response?.statusCode == 404) return _defaultSettings();
     rethrow;
   }
-});
+}
 
 /// Riwayat grafik: tabel `incubator_status` via
 /// `GET /api/incubator/status/history?limit=100` (list ASC).
 /// Fallback berlapis agar tidak blank saat backend belum deploy:
 /// `/api/incubator/telemetry-logs` -> `/api/telemetry` -> [].
-final incubatorStatusHistoryProvider = FutureProvider<List<TelemetryLog>>((ref) async {
+@Riverpod(keepAlive: true)
+Future<List<TelemetryLog>> incubatorStatusHistory(Ref ref) async {
   final dio = ref.read(apiClientProvider);
   try {
     final response = await dio.get(
@@ -111,7 +118,7 @@ final incubatorStatusHistoryProvider = FutureProvider<List<TelemetryLog>>((ref) 
     }
   }
   return [];
-});
+}
 
 List<TelemetryLog> _parseTelemetry(dynamic data) {
   List list;
@@ -138,7 +145,8 @@ List<TelemetryLog> _parseTelemetry(dynamic data) {
   return logs;
 }
 
-final rotationLogsProvider = FutureProvider<List<RotationLog>>((ref) async {
+@Riverpod(keepAlive: true)
+Future<List<RotationLog>> rotationLogs(Ref ref) async {
   final dio = ref.read(apiClientProvider);
   try {
     final response = await dio.get('/api/incubator/rotation-logs');
@@ -159,23 +167,19 @@ final rotationLogsProvider = FutureProvider<List<RotationLog>>((ref) async {
     if (e.response?.statusCode == 401) rethrow;
     return [];
   }
-});
+}
 
-class IncubatorSettingsNotifier extends StateNotifier<AsyncValue<IncubatorSettings>> {
-  final Ref _ref;
-
-  IncubatorSettingsNotifier(this._ref) : super(const AsyncLoading());
+@Riverpod(keepAlive: true)
+class IncubatorSettingsUpdate extends _$IncubatorSettingsUpdate {
+  @override
+  AsyncValue<IncubatorSettings> build() => const AsyncLoading();
 
   Future<void> update(IncubatorSettings settings) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final dio = _ref.read(apiClientProvider);
+      final dio = ref.read(apiClientProvider);
       final response = await dio.put('/api/incubator/settings', data: settings.toJson());
       return IncubatorSettings.fromJson(response.data as Map<String, dynamic>);
     });
   }
 }
-
-final incubatorSettingsUpdateProvider = StateNotifierProvider<IncubatorSettingsNotifier, AsyncValue<IncubatorSettings>>(
-  (ref) => IncubatorSettingsNotifier(ref),
-);

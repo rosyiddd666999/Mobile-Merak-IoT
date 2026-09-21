@@ -1,18 +1,22 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/auth_response.dart';
 import '../models/user.dart';
 import 'api_client_provider.dart';
 import 'secure_storage_provider.dart';
 
+part 'auth_provider.g.dart';
+
 final currentUserProvider = StateProvider<User?>((ref) => null);
 
-final authProvider = AsyncNotifierProvider<AuthNotifier, AuthResponse?>(AuthNotifier.new);
-
-class AuthNotifier extends AsyncNotifier<AuthResponse?> {
+@Riverpod(keepAlive: true)
+class Auth extends _$Auth {
   @override
-  Future<AuthResponse?> build() async {
+  FutureOr<AuthResponse?> build() async {
     final storage = ref.read(secureStorageProvider);
     final token = await storage.read(key: 'jwt_token');
     if (token == null || token.isEmpty) return null;

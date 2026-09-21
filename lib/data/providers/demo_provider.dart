@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:math';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/alert.dart';
 import '../models/incubator_status.dart';
 import '../models/incubator_settings.dart';
 import '../models/rotation_log.dart';
 import '../models/telemetry_log.dart';
+
+part 'demo_provider.g.dart';
 
 class DemoState {
   final bool active;
@@ -42,8 +44,15 @@ class DemoState {
       );
 }
 
-class DemoNotifier extends StateNotifier<DemoState> {
-  DemoNotifier() : super(const DemoState());
+@Riverpod(keepAlive: true)
+class Demo extends _$Demo {
+  @override
+  DemoState build() {
+    ref.onDispose(() {
+      _ticker?.cancel();
+    });
+    return const DemoState();
+  }
 
   Timer? _ticker;
   final _random = Random();
@@ -251,13 +260,4 @@ class DemoNotifier extends StateNotifier<DemoState> {
     return logs;
   }
 
-  @override
-  void dispose() {
-    _ticker?.cancel();
-    super.dispose();
-  }
 }
-
-final demoProvider = StateNotifierProvider<DemoNotifier, DemoState>((ref) {
-  return DemoNotifier();
-});

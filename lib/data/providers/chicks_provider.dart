@@ -1,9 +1,15 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/chick.dart';
 import 'api_client_provider.dart';
 
-final chicksListProvider = FutureProvider<List<Chick>>((ref) async {
+part 'chicks_provider.g.dart';
+
+@Riverpod(keepAlive: true)
+Future<List<Chick>> chicksList(Ref ref) async {
   final dio = ref.read(apiClientProvider);
   try {
     final response = await dio.get('/api/chicks');
@@ -11,9 +17,10 @@ final chicksListProvider = FutureProvider<List<Chick>>((ref) async {
   } on DioException {
     rethrow;
   }
-});
+}
 
-final chickDetailProvider = FutureProvider.family<Chick, String>((ref, id) async {
+@Riverpod(keepAlive: true)
+Future<Chick> chickDetail(Ref ref, String id) async {
   final dio = ref.read(apiClientProvider);
   try {
     final response = await dio.get('/api/chicks/$id');
@@ -21,11 +28,12 @@ final chickDetailProvider = FutureProvider.family<Chick, String>((ref, id) async
   } on DioException {
     rethrow;
   }
-});
+}
 
-class ChickCreateNotifier extends AsyncNotifier<Chick?> {
+@Riverpod(keepAlive: true)
+class ChickCreate extends _$ChickCreate {
   @override
-  Future<Chick?> build() async => null;
+  FutureOr<Chick?> build() => null;
 
   Future<Chick?> create(Chick chick) async {
     state = const AsyncLoading();
@@ -46,13 +54,12 @@ class ChickCreateNotifier extends AsyncNotifier<Chick?> {
   }
 }
 
-final chickCreateProvider = AsyncNotifierProvider<ChickCreateNotifier, Chick?>(
-  ChickCreateNotifier.new,
-);
+// Alias nama lama agar call-site tidak berubah.
 
-class ChickUpdateNotifier extends AsyncNotifier<Chick?> {
+@Riverpod(keepAlive: true)
+class ChickUpdate extends _$ChickUpdate {
   @override
-  Future<Chick?> build() async => null;
+  FutureOr<Chick?> build() => null;
 
   Future<Chick?> updateChick(String id, Chick chick) async {
     state = const AsyncLoading();
@@ -73,13 +80,12 @@ class ChickUpdateNotifier extends AsyncNotifier<Chick?> {
   }
 }
 
-final chickUpdateProvider = AsyncNotifierProvider<ChickUpdateNotifier, Chick?>(
-  ChickUpdateNotifier.new,
-);
+// Alias nama lama agar call-site tidak berubah.
 
-class ChickDeleteNotifier extends AsyncNotifier<void> {
+@Riverpod(keepAlive: true)
+class ChickDelete extends _$ChickDelete {
   @override
-  Future<void> build() async {}
+  FutureOr<void> build() {}
 
   /// Hapus anakan. 404 = sudah hilang di server, tetap dianggap sukses.
   Future<void> deleteChick(String id) async {
@@ -102,6 +108,4 @@ class ChickDeleteNotifier extends AsyncNotifier<void> {
   }
 }
 
-final chickDeleteProvider = AsyncNotifierProvider<ChickDeleteNotifier, void>(
-  ChickDeleteNotifier.new,
-);
+// Alias nama lama agar call-site tidak berubah.

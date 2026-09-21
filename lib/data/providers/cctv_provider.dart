@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../services/cctv_service.dart';
 import 'api_client_provider.dart';
 import 'secure_storage_provider.dart';
+
+part 'cctv_provider.g.dart';
 
 enum CctvFeed { inkubator, kandang }
 
@@ -57,15 +59,16 @@ class CctvState {
       );
 }
 
-class CctvNotifier extends StateNotifier<CctvState> {
-  final Ref _ref;
-  CctvNotifier(this._ref) : super(const CctvState());
+@Riverpod(keepAlive: true)
+class Cctv extends _$Cctv {
+  @override
+  CctvState build() => const CctvState();
 
-  CctvService get _service => CctvService(_ref.read(apiClientProvider));
+  CctvService get _service => CctvService(ref.read(apiClientProvider));
 
   Future<void> loadCustom() async {
     try {
-      final storage = _ref.read(secureStorageProvider);
+      final storage = ref.read(secureStorageProvider);
       // Bersihkan sisa override lama (?url= sudah tidak dipakai).
       await storage.delete(key: _kCctvCustomKey);
       final savedBase = await storage.read(key: _kCctvBaseKey);
@@ -90,9 +93,9 @@ class CctvNotifier extends StateNotifier<CctvState> {
     }
     try {
       if (v.isEmpty) {
-        await _ref.read(secureStorageProvider).delete(key: _kCctvBaseKey);
+        await ref.read(secureStorageProvider).delete(key: _kCctvBaseKey);
       } else {
-        await _ref.read(secureStorageProvider).write(key: _kCctvBaseKey, value: v);
+        await ref.read(secureStorageProvider).write(key: _kCctvBaseKey, value: v);
       }
     } catch (_) {}
     state = state.copyWith(
@@ -148,5 +151,3 @@ class CctvNotifier extends StateNotifier<CctvState> {
     state = state.copyWith(reachable: false, error: 'Stream terputus');
   }
 }
-
-final cctvProvider = StateNotifierProvider<CctvNotifier, CctvState>((ref) => CctvNotifier(ref));
