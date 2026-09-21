@@ -5,11 +5,13 @@ import '../../core/theme.dart';
 import '../../core/utils/api_error.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/silsilah.dart';
+import '../../core/utils/validators.dart';
 import '../../data/models/breeder.dart';
 import '../../data/models/egg.dart';
 import '../../data/providers/breeders_provider.dart';
 import '../../data/providers/dashboard_provider.dart';
 import '../../data/providers/eggs_provider.dart';
+import '../../shared/app_form.dart';
 import '../../shared/detail_app_bar.dart';
 import '../../shared/loading_widget.dart';
 import 'widgets/slot_picker.dart';
@@ -261,7 +263,7 @@ class _EggFormScreenState extends ConsumerState<EggFormScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _label('Indukan Jantan *'),
+            const AppLabel('Indukan Jantan *'),
             DropdownButtonFormField<String?>(
               initialValue: _indukJantanId,
               items: jantanList
@@ -282,7 +284,7 @@ class _EggFormScreenState extends ConsumerState<EggFormScreen> {
               validator: (v) => v == null ? 'Pilih indukan' : null,
             ),
             const SizedBox(height: 16),
-            _label('Indukan Betina *'),
+            const AppLabel('Indukan Betina *'),
             DropdownButtonFormField<String?>(
               initialValue: _indukBetinaId,
               items: betinaList
@@ -314,7 +316,7 @@ class _EggFormScreenState extends ConsumerState<EggFormScreen> {
                 ),
               ),
             const SizedBox(height: 16),
-            _label('Nomor telur (suffix) *'),
+            const AppLabel('Nomor telur (suffix) *'),
             Row(
               children: [
                 Container(
@@ -342,8 +344,8 @@ class _EggFormScreenState extends ConsumerState<EggFormScreen> {
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(hintText: '01 / 02 / 03'),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Wajib diisi';
-                      final n = int.tryParse(v.trim());
+                      final req = validateRequired(v); if (req != null) return req;
+                      final n = int.tryParse(v!.trim());
                       if (n == null || n < 1 || n > 99) return '1-99';
                       return null;
                     },
@@ -362,7 +364,7 @@ class _EggFormScreenState extends ConsumerState<EggFormScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            _label('Tanggal Masuk *'),
+            const AppLabel('Tanggal Masuk *'),
             InkWell(
               onTap: _pickDate,
               child: InputDecorator(
@@ -381,7 +383,7 @@ class _EggFormScreenState extends ConsumerState<EggFormScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            _label('Fertilitas *'),
+            const AppLabel('Fertilitas *'),
             DropdownButtonFormField<String>(
               initialValue: _fertilitas,
               items: const [
@@ -395,7 +397,7 @@ class _EggFormScreenState extends ConsumerState<EggFormScreen> {
               onChanged: (v) => setState(() => _fertilitas = v!),
             ),
             const SizedBox(height: 16),
-            _label('Akhir *'),
+            const AppLabel('Akhir *'),
             DropdownButtonFormField<String>(
               initialValue: _akhir,
               items: const [
@@ -406,7 +408,7 @@ class _EggFormScreenState extends ConsumerState<EggFormScreen> {
               onChanged: (v) => setState(() => _akhir = v!),
             ),
             const SizedBox(height: 16),
-            _label('Slot *'),
+            const AppLabel('Slot *'),
             SlotPicker(
               occupiedSlots: {
                 for (final e in eggs)
@@ -434,7 +436,7 @@ class _EggFormScreenState extends ConsumerState<EggFormScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            _label('Catatan'),
+            const AppLabel('Catatan'),
             TextFormField(controller: _catatanController, maxLines: 3),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -457,13 +459,4 @@ class _EggFormScreenState extends ConsumerState<EggFormScreen> {
     );
   }
 
-  Widget _label(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        text,
-        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-      ),
-    );
-  }
 }

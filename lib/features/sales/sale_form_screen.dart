@@ -5,12 +5,14 @@ import '../../core/theme.dart';
 import '../../core/utils/api_error.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/id_generator.dart';
+import '../../core/utils/validators.dart';
 import '../../data/models/sale.dart';
 import '../../data/providers/breeders_provider.dart';
 import '../../data/providers/chicks_provider.dart';
 import '../../data/providers/dashboard_provider.dart';
 import '../../data/providers/eggs_provider.dart';
 import '../../data/providers/sales_provider.dart';
+import '../../shared/app_form.dart';
 import '../../shared/detail_app_bar.dart';
 
 class SaleFormScreen extends ConsumerStatefulWidget {
@@ -148,14 +150,14 @@ class _SaleFormScreenState extends ConsumerState<SaleFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _label('ID Penjualan *'),
+              const AppLabel('ID Penjualan *'),
               TextFormField(
                 controller: _idController,
                 decoration: const InputDecoration(hintText: 'SLS-001'),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+                validator: validateRequired,
               ),
               const SizedBox(height: 16),
-              _label('Tanggal *'),
+              const AppLabel('Tanggal *'),
               InkWell(
                 onTap: _pickDate,
                 child: InputDecorator(
@@ -170,7 +172,7 @@ class _SaleFormScreenState extends ConsumerState<SaleFormScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              _label('Jenis *'),
+              const AppLabel('Jenis *'),
               DropdownButtonFormField<String>(
                 initialValue: _jenis,
                 items: _jenisOptions
@@ -183,14 +185,14 @@ class _SaleFormScreenState extends ConsumerState<SaleFormScreen> {
                 }),
               ),
               const SizedBox(height: 16),
-              _label('Item *'),
+              const AppLabel('Item *'),
               TextFormField(
                 controller: _itemController,
                 decoration: const InputDecoration(hintText: 'Anakan merak biru'),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+                validator: validateRequired,
               ),
               const SizedBox(height: 16),
-              _label('Referensi ID'),
+              const AppLabel('Referensi ID'),
               _referensiDropdown(),
               const SizedBox(height: 8),
               OutlinedButton.icon(
@@ -199,37 +201,37 @@ class _SaleFormScreenState extends ConsumerState<SaleFormScreen> {
                 label: const Text('Isi item dari referensi'),
               ),
               const SizedBox(height: 16),
-              _label('Pembeli *'),
+              const AppLabel('Pembeli *'),
               TextFormField(
                 controller: _pembeliController,
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+                validator: validateRequired,
               ),
               const SizedBox(height: 16),
-              _label('Qty *'),
+              const AppLabel('Qty *'),
               TextFormField(
                 controller: _qtyController,
                 keyboardType: TextInputType.number,
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Wajib diisi';
-                  final n = int.tryParse(v);
+                  final req = validateRequired(v); if (req != null) return req;
+                  final n = int.tryParse(v!);
                   if (n == null || n < 1) return 'Minimal 1';
                   return null;
                 },
               ),
               const SizedBox(height: 16),
-              _label('Harga Satuan (Rp) *'),
+              const AppLabel('Harga Satuan (Rp) *'),
               TextFormField(
                 controller: _hargaController,
                 keyboardType: TextInputType.number,
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Wajib diisi';
-                  final n = double.tryParse(v);
+                  final req = validateRequired(v); if (req != null) return req;
+                  final n = double.tryParse(v!);
                   if (n == null || n <= 0) return 'Angka positif';
                   return null;
                 },
               ),
               const SizedBox(height: 16),
-              _label('Status *'),
+              const AppLabel('Status *'),
               DropdownButtonFormField<String>(
                 initialValue: _status,
                 items: const [
@@ -240,7 +242,7 @@ class _SaleFormScreenState extends ConsumerState<SaleFormScreen> {
                 onChanged: (v) => setState(() => _status = v!),
               ),
               const SizedBox(height: 16),
-              _label('Catatan'),
+              const AppLabel('Catatan'),
               TextFormField(
                 controller: _catatanController,
                 maxLines: 3,
@@ -260,12 +262,6 @@ class _SaleFormScreenState extends ConsumerState<SaleFormScreen> {
     );
   }
 
-  Widget _label(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-    );
-  }
 
   /// Dropdown ID sesuai jenis (Telur/Anakan/Indukan), sinkron ke controller.
   Widget _referensiDropdown() {

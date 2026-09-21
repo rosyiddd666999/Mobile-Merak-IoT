@@ -5,6 +5,7 @@ import '../../core/theme.dart';
 import '../../core/utils/api_error.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/id_generator.dart';
+import '../../core/utils/validators.dart';
 import '../../data/models/breeder.dart';
 import '../../data/models/chick.dart';
 import '../../data/models/egg.dart';
@@ -17,6 +18,7 @@ import '../../data/providers/dashboard_provider.dart';
 import '../../data/providers/eggs_provider.dart';
 import '../../data/providers/finance_provider.dart';
 import '../../data/providers/sales_provider.dart';
+import '../../shared/app_form.dart';
 import '../../shared/detail_app_bar.dart';
 
 class FinanceFormScreen extends ConsumerStatefulWidget {
@@ -195,14 +197,14 @@ class _FinanceFormScreenState extends ConsumerState<FinanceFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _label('ID Entri *'),
+              const AppLabel('ID Entri *'),
               TextFormField(
                 controller: _idController,
                 decoration: const InputDecoration(hintText: 'FIN-001'),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+                validator: validateRequired,
               ),
               const SizedBox(height: 16),
-              _label('Tanggal *'),
+              const AppLabel('Tanggal *'),
               InkWell(
                 onTap: _pickDate,
                 child: InputDecorator(
@@ -217,7 +219,7 @@ class _FinanceFormScreenState extends ConsumerState<FinanceFormScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              _label('Tipe *'),
+              const AppLabel('Tipe *'),
               DropdownButtonFormField<String>(
                 initialValue: _tipe,
                 items: const [
@@ -232,7 +234,7 @@ class _FinanceFormScreenState extends ConsumerState<FinanceFormScreen> {
                 }),
               ),
               const SizedBox(height: 16),
-              _label('Kategori *'),
+              const AppLabel('Kategori *'),
               DropdownButtonFormField<String>(
                 initialValue: _kategoriOptions.contains(_kategori) ? _kategori : null,
                 items: _kategoriOptions
@@ -249,35 +251,35 @@ class _FinanceFormScreenState extends ConsumerState<FinanceFormScreen> {
                 TextFormField(
                   controller: _kategoriController,
                   decoration: const InputDecoration(hintText: 'Tulis kategori sendiri'),
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+                  validator: validateRequired,
                 ),
               ],
               if (_isPenjualan) ...[
                 const SizedBox(height: 16),
-                _label('Referensi Terjual *'),
+                const AppLabel('Referensi Terjual *'),
                 _referensiDropdown(eggsAsync, chicksAsync, breedersAsync),
                 const SizedBox(height: 16),
-                _label('Pembeli *'),
+                const AppLabel('Pembeli *'),
                 TextFormField(
                   controller: _pembeliController,
                   decoration: const InputDecoration(hintText: 'Nama pembeli'),
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+                  validator: validateRequired,
                 ),
               ],
               const SizedBox(height: 16),
-              _label('Jumlah (Rp) *'),
+              const AppLabel('Jumlah (Rp) *'),
               TextFormField(
                 controller: _jumlahController,
                 keyboardType: TextInputType.number,
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Wajib diisi';
-                  final n = double.tryParse(v);
+                  final req = validateRequired(v); if (req != null) return req;
+                  final n = double.tryParse(v!);
                   if (n == null || n <= 0) return 'Angka positif';
                   return null;
                 },
               ),
               const SizedBox(height: 16),
-              _label('Catatan'),
+              const AppLabel('Catatan'),
               TextFormField(
                 controller: _catatanController,
                 maxLines: 3,
@@ -297,12 +299,6 @@ class _FinanceFormScreenState extends ConsumerState<FinanceFormScreen> {
     );
   }
 
-  Widget _label(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-    );
-  }
 
   /// Dropdown ID yang dijual sesuai jenis kategori penjualan.
   Widget _referensiDropdown(

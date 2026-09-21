@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/utils/api_error.dart';
+import '../../core/utils/validators.dart';
 import '../../data/models/incubator_settings.dart';
 import '../../data/providers/incubator_provider.dart';
 import '../../shared/loading_widget.dart';
@@ -85,8 +86,8 @@ class _IncubatorSettingsScreenState extends ConsumerState<IncubatorSettingsScree
                     controller: _suhuMinController,
                     keyboardType: TextInputType.number,
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Wajib diisi';
-                      final val = double.tryParse(v);
+                      final req = validateRequired(v); if (req != null) return req;
+                      final val = double.tryParse(v!);
                       if (val == null || val < 0 || val > 50) return '0-50°C';
                       return null;
                     },
@@ -97,8 +98,8 @@ class _IncubatorSettingsScreenState extends ConsumerState<IncubatorSettingsScree
                     controller: _suhuMaxController,
                     keyboardType: TextInputType.number,
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Wajib diisi';
-                      final val = double.tryParse(v);
+                      final req = validateRequired(v); if (req != null) return req;
+                      final val = double.tryParse(v!);
                       if (val == null || val < 0 || val > 50) return '0-50°C';
                       if (val <= double.parse(_suhuMinController.text)) return 'Harus > Suhu Min';
                       return null;
@@ -110,8 +111,8 @@ class _IncubatorSettingsScreenState extends ConsumerState<IncubatorSettingsScree
                     controller: _lembapMinController,
                     keyboardType: TextInputType.number,
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Wajib diisi';
-                      final val = double.tryParse(v);
+                      final req = validateRequired(v); if (req != null) return req;
+                      final val = double.tryParse(v!);
                       if (val == null || val < 0 || val > 100) return '0-100%';
                       return null;
                     },
@@ -122,8 +123,8 @@ class _IncubatorSettingsScreenState extends ConsumerState<IncubatorSettingsScree
                     controller: _lembapMaxController,
                     keyboardType: TextInputType.number,
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Wajib diisi';
-                      final val = double.tryParse(v);
+                      final req = validateRequired(v); if (req != null) return req;
+                      final val = double.tryParse(v!);
                       if (val == null || val < 0 || val > 100) return '0-100%';
                       if (val <= double.parse(_lembapMinController.text)) return 'Harus > Kelembapan Min';
                       return null;
@@ -135,8 +136,8 @@ class _IncubatorSettingsScreenState extends ConsumerState<IncubatorSettingsScree
                     controller: _intervalController,
                     keyboardType: TextInputType.number,
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Wajib diisi';
-                      final val = int.tryParse(v);
+                      final req = validateRequired(v); if (req != null) return req;
+                      final val = int.tryParse(v!);
                       if (val == null || val < 30) return 'Minimal 30 menit';
                       return null;
                     },

@@ -5,11 +5,13 @@ import '../../core/theme.dart';
 import '../../core/utils/api_error.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/silsilah.dart';
+import '../../core/utils/validators.dart';
 import '../../data/models/chick.dart';
 import '../../data/models/egg.dart';
 import '../../data/providers/chicks_provider.dart';
 import '../../data/providers/dashboard_provider.dart';
 import '../../data/providers/eggs_provider.dart';
+import '../../shared/app_form.dart';
 import '../../shared/detail_app_bar.dart';
 import '../../shared/loading_widget.dart';
 
@@ -205,7 +207,7 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _label('Egg Asal *'),
+            const AppLabel('Egg Asal *'),
             DropdownButtonFormField<String?>(
               initialValue: _eggId,
               items: eggList
@@ -232,7 +234,7 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
                 ),
               ),
             const SizedBox(height: 16),
-            _label('Nomor anakan (suffix -C) *'),
+            const AppLabel('Nomor anakan (suffix -C) *'),
             Row(
               children: [
                 Container(
@@ -254,8 +256,8 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(hintText: '01 / 02'),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Wajib diisi';
-                      final clean = v.trim().toUpperCase().replaceFirst(RegExp(r'^C'), '');
+                      final req = validateRequired(v); if (req != null) return req;
+                      final clean = v!.trim().toUpperCase().replaceFirst(RegExp(r'^C'), '');
                       final n = int.tryParse(clean);
                       if (n == null || n < 1 || n > 99) return '1-99';
                       return null;
@@ -272,7 +274,7 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            _label('Tanggal Menetas *'),
+            const AppLabel('Tanggal Menetas *'),
             InkWell(
               onTap: _pickDate,
               child: InputDecorator(
@@ -287,25 +289,25 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            _label('Berat Awal (gram) *'),
+            const AppLabel('Berat Awal (gram) *'),
             TextFormField(
               controller: _beratController,
               keyboardType: TextInputType.number,
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Wajib diisi';
-                final n = double.tryParse(v);
+                final req = validateRequired(v); if (req != null) return req;
+                final n = double.tryParse(v!);
                 if (n == null || n <= 0) return 'Angka positif';
                 return null;
               },
             ),
             const SizedBox(height: 16),
-            _label('Skor Kesehatan *'),
+            const AppLabel('Skor Kesehatan *'),
             TextFormField(
               controller: _skorController,
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+              validator: validateRequired,
             ),
             const SizedBox(height: 16),
-            _label('Status *'),
+            const AppLabel('Status *'),
             DropdownButtonFormField<String>(
               initialValue: _status,
               items: const [
@@ -317,7 +319,7 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
               onChanged: (v) => setState(() => _status = v!),
             ),
             const SizedBox(height: 16),
-            _label('Catatan'),
+            const AppLabel('Catatan'),
             TextFormField(controller: _catatanController, maxLines: 3),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -336,10 +338,4 @@ class _ChickFormScreenState extends ConsumerState<ChickFormScreen> {
     );
   }
 
-  Widget _label(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-    );
-  }
 }

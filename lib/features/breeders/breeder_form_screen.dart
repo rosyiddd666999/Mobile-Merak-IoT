@@ -5,9 +5,11 @@ import '../../core/theme.dart';
 import '../../core/utils/api_error.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/utils/silsilah.dart';
+import '../../core/utils/validators.dart';
 import '../../data/models/breeder.dart';
 import '../../data/providers/breeders_provider.dart';
 import '../../data/providers/dashboard_provider.dart';
+import '../../shared/app_form.dart';
 import '../../shared/detail_app_bar.dart';
 import '../../shared/loading_widget.dart';
 
@@ -190,7 +192,7 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _label('Jenis Kelamin *'),
+            const AppLabel('Jenis Kelamin *'),
             DropdownButtonFormField<String>(
               initialValue: _jenisKelamin,
               items: const [
@@ -205,7 +207,7 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
                       }),
             ),
             const SizedBox(height: 16),
-            _label('Parent Jantan (kosong = F0)'),
+            const AppLabel('Parent Jantan (kosong = F0)'),
             DropdownButtonFormField<String?>(
               initialValue: _parentJantanId,
               items: [
@@ -220,7 +222,7 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
                       }),
             ),
             const SizedBox(height: 16),
-            _label('Parent Betina (kosong = F0)'),
+            const AppLabel('Parent Betina (kosong = F0)'),
             DropdownButtonFormField<String?>(
               initialValue: _parentBetinaId,
               items: [
@@ -243,7 +245,7 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
                 ),
               ),
             const SizedBox(height: 16),
-            _label('Nomor ID (suffix) *'),
+            const AppLabel('Nomor ID (suffix) *'),
             Row(
               children: [
                 Container(
@@ -265,8 +267,8 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(hintText: '01 / 02'),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Wajib diisi';
-                      final n = int.tryParse(v.trim());
+                      final req = validateRequired(v); if (req != null) return req;
+                      final n = int.tryParse(v!.trim());
                       if (n == null || n < 1 || n > 99) return '1-99';
                       return null;
                     },
@@ -282,13 +284,13 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            _label('Nama'),
+            const AppLabel('Nama'),
             TextFormField(
               controller: _namaController,
               decoration: const InputDecoration(hintText: 'Opsional'),
             ),
             const SizedBox(height: 16),
-            _label('Tanggal Lahir'),
+            const AppLabel('Tanggal Lahir'),
             InkWell(
               onTap: _pickDate,
               child: InputDecorator(
@@ -305,20 +307,20 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            _label('Generasi *'),
+            const AppLabel('Generasi *'),
             TextFormField(
               controller: _generasiController,
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+              validator: validateRequired,
             ),
             const SizedBox(height: 16),
-            _label('Varian Warna *'),
+            const AppLabel('Varian Warna *'),
             TextFormField(
               controller: _varianWarnaController,
               decoration: const InputDecoration(hintText: 'Hijau / Biru / Putih'),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+              validator: validateRequired,
             ),
             const SizedBox(height: 16),
-            _label('Asal *'),
+            const AppLabel('Asal *'),
             DropdownButtonFormField<String>(
               initialValue: _asal,
               items: const [
@@ -328,7 +330,7 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
               onChanged: (v) => setState(() => _asal = v!),
             ),
             const SizedBox(height: 16),
-            _label('Status *'),
+            const AppLabel('Status *'),
             DropdownButtonFormField<String>(
               initialValue: _status,
               items: const [
@@ -355,10 +357,4 @@ class _BreederFormScreenState extends ConsumerState<BreederFormScreen> {
     );
   }
 
-  Widget _label(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-    );
-  }
 }

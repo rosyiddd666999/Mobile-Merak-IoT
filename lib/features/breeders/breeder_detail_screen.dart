@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/app_routes.dart';
+import '../../core/status_mapper.dart';
 import '../../core/theme.dart';
 import '../../core/utils/api_error.dart';
 import '../../core/utils/date_formatter.dart';
@@ -9,10 +11,11 @@ import '../../data/providers/breeders_provider.dart';
 import '../../data/providers/chicks_provider.dart';
 import '../../data/providers/dashboard_provider.dart';
 import '../../data/providers/eggs_provider.dart';
+import '../../shared/async_state_view.dart';
 import '../../shared/confirm_dialog.dart';
-import '../../shared/loading_widget.dart';
-import '../../shared/error_widget.dart';
+import '../../shared/design_kit.dart';
 import '../../shared/detail_app_bar.dart';
+import '../../shared/detail_section.dart';
 
 class BreederDetailScreen extends ConsumerWidget {
   final String id;
@@ -23,21 +26,18 @@ class BreederDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final breederAsync = ref.watch(breederDetailProvider(id));
     final user = ref.watch(currentUserProvider);
-    final canDelete =
-        user?.role == 'pemilik' || user?.role == 'staff';
+    final role = UserRoleX.fromString(user?.role ?? '');
+    final canDelete = role == UserRole.pemilik || role == UserRole.staff;
 
     return Scaffold(
       appBar: const DetailAppBar(title: 'Detail Indukan'),
-      body: breederAsync.when(
-        loading: () => const LoadingWidget(),
-        error: (err, _) => AppErrorWidget(
-          message: friendlyApiError(err),
-          onRetry: () => ref.refresh(breederDetailProvider(id)),
-        ),
-        data: (breeder) {
+      body: AsyncStateView(
+        async: breederAsync,
+        onRetry: () => ref.refresh(breederDetailProvider(id)),
+        dataBuilder: (breeder) {
           final isJantan = breeder.jenisKelamin == 'jantan';
           final genderColor = isJantan ? AppColors.info : AppColors.secondary;
-          final statusColor = _statusColor(breeder.status);
+          final status = StatusMapper.breeder(breeder.status);
           final deleting = ref.watch(breederDeleteProvider).isLoading;
           // Relasi anak (dihitung lokal, pola sama seperti stats list).
           final eggs = ref.watch(eggsListProvider).valueOrNull ?? const [];
@@ -100,21 +100,7 @@ class BreederDetailScreen extends ConsumerWidget {
                                 ),
                               ),
                             const SizedBox(height: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: statusColor.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                _statusLabel(breeder.status),
-                                style: TextStyle(
-                                  color: statusColor,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
+                            StatusChip(label: status.$1, status: status.$2),
                           ],
                         ),
                       ),
@@ -123,58 +109,84 @@ class BreederDetailScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              _sectionTitle(context, 'Informasi'),
-              Card(
-                child: Column(
-                  children: [
-                    _infoRow(Icons.wc, 'Jenis Kelamin', isJantan ? 'Jantan' : 'Betina'),
-                    _divider(),
-                    _infoRow(Icons.layers_outlined, 'Generasi', breeder.generasi),
-                    _divider(),
-                    _infoRow(Icons.palette_outlined, 'Varian Warna', breeder.varianWarna),
-                    _divider(),
-                    _infoRow(Icons.flag_outlined, 'Asal', _asalLabel(breeder.asal)),
-                    if (breeder.tanggalLahir != null) ...[
-                      _divider(),
-                      _infoRow(Icons.cake_outlined, 'Tanggal Lahir', formatDate(breeder.tanggalLahir!.toIso8601String())),
-                    ],
-                  ],
-                ),
+              DetailSection(
+                title: 'Informasi',
+                children: [
+                  Card(
+                    margin: EdgeInsets.zero,
+                    child: Column(
+                      children: [
+                        DetailRow(icon: Icons.wc, label: 'Jenis Kelamin', value: isJantan ? 'Jantan' : 'Betina'),
+                        const DetailDivider(),
+                        DetailRow(icon: Icons.layers_outlined, label: 'Generasi', value: breeder.generasi),
+                        const DetailDivider(),
+                        DetailRow(icon: Icons.palette_outlined, label: 'Varian Warna', value: breeder.varianWarna),
+                        const DetailDivider(),
+                        DetailRow(icon: Icons.flag_outlined, label: 'Asal', value: _asalLabel(breeder.asal)),
+                        if (breeder.tanggalLahir != null) ...[
+                          const DetailDivider(),
+                          DetailRow(icon: Icons.cake_outlined, label: 'Tanggal Lahir', value: formatDate(breeder.tanggalLahir!.toIso8601String())),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
-              _sectionTitle(context, 'Performa'),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Expanded(child: _metric('Total Telur', '${breeder.totalTelur}', Icons.egg_outlined)),
-                      Container(width: 1, height: 40, color: AppColors.divider),
-                      Expanded(child: _metric('% Fertil', '${breeder.persentaseFertil.toStringAsFixed(0)}%', Icons.percent)),
-                      Container(width: 1, height: 40, color: AppColors.divider),
-                      Expanded(child: _metric('Anakan', '${breeder.jumlahAnakan}', Icons.cruelty_free)),
-                    ],
+              DetailSection(
+                title: 'Performa',
+                children: [
+                  Card(
+                    margin: EdgeInsets.zero,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Expanded(child: _metric('Total Telur', '${breeder.totalTelur}', Icons.egg_outlined)),
+                          Container(width: 1, height: 40, color: AppColors.divider),
+                          Expanded(child: _metric('% Fertil', '${breeder.persentaseFertil.toStringAsFixed(0)}%', Icons.percent)),
+                          Container(width: 1, height: 40, color: AppColors.divider),
+                          Expanded(child: _metric('Anakan', '${breeder.jumlahAnakan}', Icons.cruelty_free)),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
               if (breeder.parentJantanId != null || breeder.parentBetinaId != null) ...[
                 const SizedBox(height: 16),
-                _sectionTitle(context, 'Silsilah'),
-                Card(
-                  child: Column(
-                    children: [
-                      if (breeder.parentJantanId != null)
-                        _parentRow(context, Icons.male, 'Ayah', breeder.parentJantanId!),
-                      if (breeder.parentJantanId != null && breeder.parentBetinaId != null) _divider(),
-                      if (breeder.parentBetinaId != null)
-                        _parentRow(context, Icons.female, 'Ibu', breeder.parentBetinaId!),
-                    ],
-                  ),
+                DetailSection(
+                  title: 'Silsilah',
+                  children: [
+                    Card(
+                      margin: EdgeInsets.zero,
+                      child: Column(
+                        children: [
+                          if (breeder.parentJantanId != null)
+                            DetailRow(
+                              icon: Icons.male,
+                              label: 'Ayah',
+                              value: breeder.parentJantanId!,
+                              onTap: () => context.push(AppRoutes.breederDetail(breeder.parentJantanId!)),
+                            ),
+                          if (breeder.parentJantanId != null && breeder.parentBetinaId != null)
+                            const DetailDivider(),
+                          if (breeder.parentBetinaId != null)
+                            DetailRow(
+                              icon: Icons.female,
+                              label: 'Ibu',
+                              value: breeder.parentBetinaId!,
+                              onTap: () => context.push(AppRoutes.breederDetail(breeder.parentBetinaId!)),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
               const SizedBox(height: 24),
               OutlinedButton.icon(
-                onPressed: () => context.push('/breeders/${breeder.id}/edit'),
+                onPressed: () => context.push('${AppRoutes.breederDetail(breeder.id)}/edit'),
                 icon: const Icon(Icons.edit_outlined),
                 label: const Text('Edit nomor'),
               ),
@@ -269,70 +281,6 @@ class BreederDetailScreen extends ConsumerWidget {
     context.pop();
   }
 
-  Widget _sectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: AppColors.primaryDark,
-        ),
-      ),
-    );
-  }
-
-  Widget _infoRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: AppColors.textSecondary),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-          ),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-        ],
-      ),
-    );
-  }
-
-  Widget _divider() {
-    return const Divider(height: 1, thickness: 0.5);
-  }
-
-  /// Baris induk yang bisa di-tap ke detailnya (jelajah silsilah tanpa putar balik).
-  Widget _parentRow(BuildContext context, IconData icon, String label, String id) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: () => context.push('/breeders/$id'),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Icon(icon, size: 18, color: AppColors.primaryTeal),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-            ),
-            Flexible(
-              child: Text(
-                id,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.right,
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(Icons.chevron_right, size: 18, color: AppColors.textSecondary),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _metric(String label, String value, IconData icon) {
     return Column(
       children: [
@@ -348,32 +296,6 @@ class BreederDetailScreen extends ConsumerWidget {
         ),
       ],
     );
-  }
-
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'breeding':
-        return AppColors.statusActive;
-      case 'resting':
-        return AppColors.statusPending;
-      case 'ready_for_sale':
-        return AppColors.statusReady;
-      default:
-        return AppColors.textSecondary;
-    }
-  }
-
-  String _statusLabel(String status) {
-    switch (status) {
-      case 'breeding':
-        return 'Aktif';
-      case 'resting':
-        return 'Istirahat';
-      case 'ready_for_sale':
-        return 'Siap Jual';
-      default:
-        return status;
-    }
   }
 
   String _asalLabel(String asal) {
