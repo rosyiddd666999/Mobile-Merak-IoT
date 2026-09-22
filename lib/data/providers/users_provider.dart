@@ -76,9 +76,10 @@ class UserUpdate extends _$UserUpdate {
       if (nama != null) 'nama': nama,
     };
     // String kosong = bersihkan foto; null = tak diubah.
-    if (fotoUrl != null) {
-      data['avatar_url'] = fotoUrl;
-      data['image_url'] = fotoUrl;
+    final photo = fotoUrl;
+    if (photo != null) {
+      data['avatar_url'] = photo;
+      data['image_url'] = photo;
     }
     try {
       final response = await dio.put('/api/users/$id', data: data);
