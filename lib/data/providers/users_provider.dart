@@ -73,11 +73,10 @@ class UserUpdate extends _$UserUpdate {
     state = const AsyncLoading();
     final dio = ref.read(apiClientProvider);
     final data = <String, dynamic>{
-      if (nama != null) 'nama': nama,
+      if (nama case final n?) 'nama': n,
     };
     // String kosong = bersihkan foto; null = tak diubah.
     final photo = fotoUrl;
-    // ignore: use_null_aware_elements
     if (photo != null) {
       data['avatar_url'] = photo;
       data['image_url'] = photo;
