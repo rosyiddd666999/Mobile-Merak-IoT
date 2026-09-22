@@ -33,6 +33,7 @@ class UsersListScreen extends ConsumerWidget {
         onRefresh: () => ref.refresh(usersListProvider.future),
         child: AsyncStateView(
           async: usersAsync,
+          actionLabel: 'memuat data pengguna',
           loadingMessage: 'Memuat data pengguna...',
           emptyIcon: Icons.people_outlined,
           emptyMessage: 'Belum ada data pengguna',

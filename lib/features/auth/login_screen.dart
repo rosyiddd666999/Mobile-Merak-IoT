@@ -91,8 +91,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 32),
-                Center(
+                if (GoRouterState.of(context).uri.queryParameters['expired'] == '1') ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: AppColors.warning.withValues(alpha: 0.4)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.lock_outline,
+                            size: 18, color: AppColors.warning),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Sesi berakhir, silakan masuk kembali',
+                            style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textDark),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                const SizedBox(height: 32),                Center(
                   child: Container(
                     width: 96,
                     height: 96,

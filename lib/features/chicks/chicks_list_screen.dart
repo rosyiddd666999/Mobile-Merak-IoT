@@ -31,6 +31,7 @@ class ChicksListScreen extends ConsumerWidget {
         onRefresh: () => ref.refresh(chicksListProvider.future),
         child: AsyncStateView(
           async: chicksAsync,
+          actionLabel: 'memuat data anakan',
           loadingMessage: 'Memuat data anakan...',
           emptyIcon: Icons.cruelty_free,
           emptyMessage: 'Belum ada data anakan',

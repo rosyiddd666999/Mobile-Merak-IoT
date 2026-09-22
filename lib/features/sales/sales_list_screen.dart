@@ -41,6 +41,7 @@ class _SalesListScreenState extends ConsumerState<SalesListScreen> {
         onRefresh: () => ref.refresh(salesListProvider.future),
         child: AsyncStateView(
           async: salesAsync,
+          actionLabel: 'memuat data penjualan',
           loadingMessage: 'Memuat data penjualan...',
           emptyIcon: Icons.sell_outlined,
           emptyMessage: 'Belum ada data penjualan',

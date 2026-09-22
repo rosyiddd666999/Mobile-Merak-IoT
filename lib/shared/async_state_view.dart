@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../core/network/app_failure.dart';
 import '../core/theme.dart';
-import '../core/utils/api_error.dart';
 import 'design_kit.dart';
 import 'loading_widget.dart';
 import 'error_widget.dart';
 
 /// Gantikan pola `async.when(loading: LoadingWidget, error: AppErrorWidget,
 /// data: ...)` yang diulang ~15x di list/detail/form-edit.
-/// [isEmpty] opsional: bila true tampilkan [EmptyState] alih-alih dataBuilder.
+/// [actionLabel] menyebut operasi yang gagal (mis. 'data indukan') agar
+/// pesan error spesifik per request. Sesi berakhir otomatis menawarkan
+/// tombol "Masuk Kembali" (tanpa "Coba Lagi" sia-sia).
 class AsyncStateView<T> extends StatelessWidget {
   final AsyncValue<T> async;
   final String loadingMessage;
@@ -17,6 +20,7 @@ class AsyncStateView<T> extends StatelessWidget {
   final Widget Function(T data) dataBuilder;
   final VoidCallback? onRetry;
   final bool Function(T data)? isEmpty;
+  final String actionLabel;
 
   const AsyncStateView({
     super.key,
@@ -27,15 +31,17 @@ class AsyncStateView<T> extends StatelessWidget {
     this.emptyMessage = 'Belum ada data.',
     this.onRetry,
     this.isEmpty,
+    this.actionLabel = 'memuat data',
   });
 
   @override
   Widget build(BuildContext context) {
     return async.when(
       loading: () => LoadingWidget(message: loadingMessage),
-      error: (e, _) => AppErrorWidget(
-        message: friendlyApiError(e),
+      error: (e, _) => AppErrorWidget.failure(
+        failure: AppFailure.from(e, action: actionLabel),
         onRetry: onRetry,
+        onLogin: () => context.go('/login'),
       ),
       data: (data) {
         if (isEmpty?.call(data) == true) {

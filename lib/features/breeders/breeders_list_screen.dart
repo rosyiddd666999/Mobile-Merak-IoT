@@ -66,6 +66,7 @@ class _BreedersListScreenState extends ConsumerState<BreedersListScreen> {
         },
         child: AsyncStateView(
           async: breedersAsync,
+          actionLabel: 'memuat data indukan',
           loadingMessage: 'Memuat data indukan...',
           emptyIcon: Icons.pets_outlined,
           emptyMessage: 'Belum ada data indukan',

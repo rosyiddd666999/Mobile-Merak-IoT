@@ -32,6 +32,7 @@ class ChickDetailScreen extends ConsumerWidget {
       appBar: const DetailAppBar(title: 'Detail Anakan'),
       body: AsyncStateView(
         async: chickAsync,
+          actionLabel: 'memuat detail anakan',
         onRetry: () => ref.refresh(chickDetailProvider(id)),
         dataBuilder: (chick) {
           final deleting = ref.watch(chickDeleteProvider).isLoading;

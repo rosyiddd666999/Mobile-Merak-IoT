@@ -23,6 +23,7 @@ class SaleDetailScreen extends ConsumerWidget {
       appBar: const DetailAppBar(title: 'Detail Penjualan'),
       body: AsyncStateView(
         async: saleAsync,
+          actionLabel: 'memuat detail penjualan',
         onRetry: () => ref.refresh(saleDetailProvider(id)),
         dataBuilder: (sale) {
           final total = sale.qty * sale.hargaSatuan;

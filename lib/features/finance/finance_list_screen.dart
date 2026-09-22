@@ -40,6 +40,7 @@ class FinanceListScreen extends ConsumerWidget {
         onRefresh: () => ref.refresh(financeListProvider.future),
         child: AsyncStateView(
           async: financeAsync,
+          actionLabel: 'memuat data keuangan',
           loadingMessage: 'Memuat data keuangan...',
           emptyIcon: Icons.receipt_long_outlined,
           emptyMessage: 'Belum ada data keuangan',

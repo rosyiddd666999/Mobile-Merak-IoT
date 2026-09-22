@@ -75,6 +75,7 @@ class EggsListScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             AsyncStateView(
               async: eggsAsync,
+          actionLabel: 'memuat data telur',
               loadingMessage: 'Memuat data telur...',
               emptyIcon: Icons.egg_outlined,
               emptyMessage: 'Belum ada data telur',

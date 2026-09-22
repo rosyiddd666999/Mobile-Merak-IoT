@@ -34,6 +34,7 @@ class BreederDetailScreen extends ConsumerWidget {
       appBar: const DetailAppBar(title: 'Detail Indukan'),
       body: AsyncStateView(
         async: breederAsync,
+          actionLabel: 'memuat detail indukan',
         onRetry: () => ref.refresh(breederDetailProvider(id)),
         dataBuilder: (breeder) {
           final isJantan = breeder.jenisKelamin == 'jantan';

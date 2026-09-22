@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 
-String friendlyApiError(Object error) {
-  // Pesan spesifik dari service (mis. UploadService) — tampilkan apa adanya.
+/// Kompatibilitas snackbars lama (pesan tanpa konteks operasi).
+/// Kode baru sebaiknya pakai `AppFailure.from(e, action: ...)` langsung
+/// agar pesan menyebut operasi yang gagal.
+String friendlyApiError(Object error, {String action = 'memproses data'}) {
   if (error is StateError && error.message.toString().isNotEmpty) {
     return error.message.toString();
   }

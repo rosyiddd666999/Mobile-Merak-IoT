@@ -160,7 +160,7 @@ class BioDomeHero extends StatelessWidget {
                 ),
                 _OverlayStat('Lampu', status?.lampuStatus ?? '-'),
                 _OverlayStat(
-                  'Rotasi',
+                  'Rotasi Manual',
                   rotationLabel(lastRotation, lastRotationRaw),
                 ),
               ],
@@ -196,7 +196,10 @@ class _OverlayStat extends StatelessWidget {
           ),
           Text(
             label,
-            style: const TextStyle(fontSize: 11, color: Colors.white60),
+            textAlign: TextAlign.center,
+            style: label.length > 10
+                ? TextStyle(fontSize: 10, color: Colors.white60)
+                : TextStyle(fontSize: 11, color: Colors.white60),
           ),
         ],
       ),

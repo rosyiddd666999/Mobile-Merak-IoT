@@ -32,19 +32,38 @@ import 'features/profile/profile_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
+/// Jembatan stream Riverpod -> Listenable agar GoRouter bereaksi terhadap
+/// perubahan auth (login/logout/401) tanpa perlu pindah rute manual.
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream();
+
+  /// Panggil saat state auth berubah agar router evaluasi ulang redirect.
+  void ping() => notifyListeners();
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
+  // Pernah login di sesi ini — untuk bedakan "belum login" vs "sesi berakhir".
+  var wasLoggedIn = ref.read(authProvider).valueOrNull != null;
+  final refresh = GoRouterRefreshStream();
+  ref.onDispose(refresh.dispose);
+  ref.listen(authProvider, (_, _) => refresh.ping());
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
+    refreshListenable: refresh,
     redirect: (context, state) {
       final auth = ref.read(authProvider).valueOrNull;
       final isLoggedIn = auth != null;
+      if (isLoggedIn) wasLoggedIn = true;
       final loc = state.matchedLocation;
       final isLoginRoute = loc == '/login';
       final isSplash = loc == '/';
 
       if (isSplash) return null;
-      if (!isLoggedIn && !isLoginRoute) return '/login';
+      if (!isLoggedIn && !isLoginRoute) {
+        // Sesi berakhir (dulu login) -> tandai agar login tampilkan pesan khusus.
+        return wasLoggedIn ? '/login?expired=1' : '/login';
+      }
       if (isLoggedIn && isLoginRoute) return '/dashboard';
       // Tab Keuangan (index terakhir) khusus pemilik — disembunyikan untuk role lain.
       if (isLoggedIn && loc.startsWith('/finance')) {

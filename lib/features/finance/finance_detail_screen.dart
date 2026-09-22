@@ -35,6 +35,7 @@ class FinanceDetailScreen extends ConsumerWidget {
       appBar: const DetailAppBar(title: 'Detail Keuangan'),
       body: AsyncStateView(
         async: entryAsync,
+          actionLabel: 'memuat detail keuangan',
         onRetry: () => ref.refresh(financeDetailProvider(id)),
         dataBuilder: (entry) {
           final isIncome = entry.tipe.toLowerCase() == 'pemasukan';

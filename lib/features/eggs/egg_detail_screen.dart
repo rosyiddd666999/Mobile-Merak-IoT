@@ -36,6 +36,7 @@ class EggDetailScreen extends ConsumerWidget {
       appBar: const DetailAppBar(title: 'Detail Telur'),
       body: AsyncStateView(
         async: eggAsync,
+          actionLabel: 'memuat detail telur',
         onRetry: () => ref.refresh(eggDetailProvider(id)),
         dataBuilder: (egg) {
           final breeders = breedersAsync.valueOrNull ?? const [];

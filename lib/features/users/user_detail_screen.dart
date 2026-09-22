@@ -39,6 +39,7 @@ class UserDetailScreen extends ConsumerWidget {
       appBar: const DetailAppBar(title: 'Detail Pengguna'),
       body: AsyncStateView(
         async: userAsync,
+          actionLabel: 'memuat detail pengguna',
         onRetry: () => ref.invalidate(usersListProvider),
         dataBuilder: (user) {
           final roleStatus = StatusMapper.userRole(user.role);
