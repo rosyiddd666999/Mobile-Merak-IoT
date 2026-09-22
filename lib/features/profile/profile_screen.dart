@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/network/app_failure.dart';
 import '../../core/theme.dart';
+import '../../data/models/user.dart';
 import '../../data/providers/api_client_provider.dart';
 import '../../data/providers/auth_provider.dart';
 import '../../data/providers/users_provider.dart';
