@@ -40,6 +40,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     final auth = ref.read(authProvider);
     if (auth.hasValue && auth.valueOrNull != null) {
+      // Segarkan user penuh (avatar dkk.) — respons login tak selalu lengkap.
+      await ref.read(authProvider.notifier).fetchMe();
+      if (!mounted) return;
       context.go('/dashboard');
     }
   }

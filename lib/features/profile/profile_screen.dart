@@ -180,7 +180,23 @@ class ProfileScreen extends ConsumerWidget {
       );
       return;
     }
-    ref.read(currentUserProvider.notifier).state = updated;
+    // Respons PUT tak selalu bawa avatar — pertahankan URL terkirim bila
+    // respons miskin field; dukung pengosongan eksplisit via konstruktor.
+    final User merged;
+    if (updated.fotoUrl?.isNotEmpty == true) {
+      merged = updated;
+    } else if (fotoUrl?.isNotEmpty == true) {
+      merged = updated.copyWith(fotoUrl: fotoUrl);
+    } else {
+      merged = User(
+        id: updated.id,
+        email: updated.email,
+        nama: updated.nama,
+        role: updated.role,
+        createdAt: updated.createdAt,
+      );
+    }
+    ref.read(currentUserProvider.notifier).state = merged;
     ref.invalidate(usersListProvider);
     ref.read(userUpdateProvider.notifier).reset();
 

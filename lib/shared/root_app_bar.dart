@@ -77,6 +77,7 @@ class RootAppBar extends ConsumerWidget implements PreferredSizeWidget {
             borderRadius: BorderRadius.circular(20),
             onTap: () => context.push('/profile'),
             child: AppPhotoCircle(
+              key: ValueKey(user?.fotoUrl),
               radius: 16,
               url: user?.fotoUrl,
               backgroundColor: AppColors.primaryTeal,
