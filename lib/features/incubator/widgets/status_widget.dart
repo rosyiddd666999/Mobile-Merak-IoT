@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/alert_margins.dart';
 import '../../../core/theme.dart';
+import '../../../core/threshold_classifier.dart';
 import '../../../data/models/incubator_settings.dart';
 import '../../../data/models/incubator_status.dart';
 import '../../../data/providers/demo_provider.dart';
@@ -17,6 +17,9 @@ class StatusWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final demo = ref.watch(demoProvider);
     final mqtt = ref.watch(mqttProvider);
+    // Ambang ikut DB; fallback web saat belum termuat (cermin frontend).
+    final settings = ref.watch(incubatorSettingsProvider).valueOrNull ??
+        webFallbackSettings();
     // MQTT realtime utama; fallback REST di bawah (MOBILE.md §6.3/§7.4.5).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(mqttProvider.notifier).connectIfNeeded();
@@ -25,6 +28,7 @@ class StatusWidget extends ConsumerWidget {
     if (demo.active && demo.status != null) {
       return _StatusContent(
         status: demo.status!,
+        settings: settings,
         isDemo: true,
         onDeactivate: () => ref.read(demoProvider.notifier).deactivate(),
       );
@@ -38,6 +42,7 @@ class StatusWidget extends ConsumerWidget {
           kelembapanSekarang: mqtt.humidity!,
           lampuStatus: mqtt.statusLamp ?? 'OFF',
         ),
+        settings: settings,
         isDemo: false,
         isRealtime: true,
         onReconnect: () => ref.read(mqttProvider.notifier).reconnect(),
@@ -50,7 +55,8 @@ class StatusWidget extends ConsumerWidget {
       error: (err, _) => _EmptyState(),
       data: (status) {
         if (status == null) return const _EmptyState();
-        return _StatusContent(status: status, isDemo: false);
+        return _StatusContent(
+            status: status, settings: settings, isDemo: false);
       },
     );
   }
@@ -58,6 +64,7 @@ class StatusWidget extends ConsumerWidget {
 
 class _StatusContent extends StatelessWidget {
   final IncubatorStatus status;
+  final IncubatorSettings settings;
   final bool isDemo;
   final bool isRealtime;
   final VoidCallback? onDeactivate;
@@ -65,6 +72,7 @@ class _StatusContent extends StatelessWidget {
 
   const _StatusContent({
     required this.status,
+    required this.settings,
     required this.isDemo,
     this.isRealtime = false,
     this.onDeactivate,
@@ -73,14 +81,14 @@ class _StatusContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = _approxSettings(status);
-    // Zona toleransi: di dalam margin dianggap normal (anti-kedip di batas).
-    final suhuNormal = status.suhuSekarang >= settings.suhuMin - AlertMargins.suhu &&
-        status.suhuSekarang <= settings.suhuMax + AlertMargins.suhu;
-    final lembapNormal = status.kelembapanSekarang >= settings.kelembapanMin - AlertMargins.kelembapan &&
-        status.kelembapanSekarang <= settings.kelembapanMax + AlertMargins.kelembapan;
-    final statusColor =
-        (suhuNormal && lembapNormal) ? AppColors.success : AppColors.critical;
+    final suhuState =
+        classifyTemp(status.suhuSekarang, settings.suhuMin, settings.suhuMax);
+    final lembapState = classifyHum(status.kelembapanSekarang,
+        settings.kelembapanMin, settings.kelembapanMax);
+    final overall = classifyOverall(
+        suhu: status.suhuSekarang,
+        lembap: status.kelembapanSekarang,
+        settings: settings);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -138,19 +146,19 @@ class _StatusContent extends StatelessWidget {
             ),
             const SizedBox(height: 12),
           ],
-          _statusBanner(statusColor, suhuNormal && lembapNormal),
+          _statusBanner(overall),
           const SizedBox(height: 24),
           _bigDisplay(
             '${status.suhuSekarang.toStringAsFixed(1)}°C',
-            'Suhu',
-            suhuNormal ? AppColors.success : AppColors.critical,
+            'Suhu · ${suhuState.label}',
+            suhuState.color,
             Icons.thermostat,
           ),
           const SizedBox(height: 16),
           _bigDisplay(
             '${status.kelembapanSekarang.toStringAsFixed(0)}%',
-            'Kelembapan',
-            lembapNormal ? AppColors.success : AppColors.critical,
+            'Kelembapan · ${lembapState.label}',
+            lembapState.color,
             Icons.water_drop,
           ),
           const SizedBox(height: 24),
@@ -168,18 +176,15 @@ class _StatusContent extends StatelessWidget {
     );
   }
 
-  IncubatorSettings _approxSettings(IncubatorStatus s) {
-    return IncubatorSettings(
-      id: 1,
-      suhuMin: 37.0,
-      suhuMax: 38.0,
-      kelembapanMin: 55.0,
-      kelembapanMax: 65.0,
-      intervalRotasiMenit: 240,
-    );
-  }
-
-  Widget _statusBanner(Color color, bool normal) {
+  Widget _statusBanner(ThresholdState state) {
+    final color = state.color;
+    final text = switch (state) {
+      ThresholdState.ideal => 'Kondisi inkubator ideal',
+      ThresholdState.waspada =>
+        'Waspada: nilai di zona margin (tanpa notifikasi)',
+      ThresholdState.perhatian =>
+        'Perhatian: nilai lewat margin — notifikasi dikirim',
+    };
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -190,11 +195,15 @@ class _StatusContent extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(normal ? Icons.check_circle : Icons.warning, color: color),
+          Icon(
+              state == ThresholdState.ideal
+                  ? Icons.check_circle
+                  : Icons.warning,
+              color: color),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              normal ? 'Kondisi inkubator normal' : 'Ada kondisi yang perlu diperhatikan',
+              text,
               style: TextStyle(color: color, fontWeight: FontWeight.w600),
             ),
           ),
@@ -287,15 +296,8 @@ class _EmptyState extends ConsumerWidget {
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: () {
-                final settings = settingsAsync.valueOrNull ??
-                    IncubatorSettings(
-                      id: 1,
-                      suhuMin: 37,
-                      suhuMax: 38,
-                      kelembapanMin: 55,
-                      kelembapanMax: 65,
-                      intervalRotasiMenit: 240,
-                    );
+                final settings =
+                    settingsAsync.valueOrNull ?? webFallbackSettings();
                 ref.read(demoProvider.notifier).activate(settings);
               },
               icon: const Icon(Icons.play_circle_outline),

@@ -11,9 +11,10 @@ import 'api_client_provider.dart';
 part 'incubator_provider.g.dart';
 
 IncubatorSettings _defaultSettings() => IncubatorSettings(
+      // Fallback web (37,5–38,5) bila backend tak terjangkau.
       id: 1,
-      suhuMin: 37.0,
-      suhuMax: 38.0,
+      suhuMin: 37.5,
+      suhuMax: 38.5,
       kelembapanMin: 55.0,
       kelembapanMax: 65.0,
       intervalRotasiMenit: 240,

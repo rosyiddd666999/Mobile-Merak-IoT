@@ -5,8 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/app_routes.dart';
 import '../../core/theme.dart';
+import '../../core/threshold_classifier.dart';
 import '../../core/utils/api_error.dart';
-import '../../data/models/incubator_settings.dart';
 import '../../data/models/incubator_status.dart';
 import '../../data/providers/auth_provider.dart';
 import '../../data/providers/breeders_provider.dart';
@@ -122,21 +122,18 @@ class DashboardScreen extends ConsumerWidget {
                 if (effectiveStatus != null)
                   GestureDetector(
                     onTap: () => context.go('/incubator'),
-                    child: IncubatorStatusCard(status: effectiveStatus),
+                    child: IncubatorStatusCard(
+                      status: effectiveStatus,
+                      settings: settingsAsync.valueOrNull ??
+                          webFallbackSettings(),
+                    ),
                   )
                 else
                   NoIncubatorCard(
                     onDemo: () {
                       final settings =
                           settingsAsync.valueOrNull ??
-                          IncubatorSettings(
-                            id: 1,
-                            suhuMin: 37,
-                            suhuMax: 38,
-                            kelembapanMin: 55,
-                            kelembapanMax: 65,
-                            intervalRotasiMenit: 240,
-                          );
+                          webFallbackSettings();
                       ref.read(demoProvider.notifier).activate(settings);
                     },
                   ),
