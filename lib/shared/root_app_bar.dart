@@ -5,6 +5,7 @@ import '../core/theme.dart';
 import '../data/providers/alerts_provider.dart';
 import '../data/providers/auth_provider.dart';
 import '../data/providers/demo_provider.dart';
+import 'app_photo.dart';
 import 'partner_logos.dart';
 
 /// AppBar untuk 5 rute utama (tab bottom nav): logo mitra diperbesar di
@@ -75,10 +76,11 @@ class RootAppBar extends ConsumerWidget implements PreferredSizeWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
             onTap: () => context.push('/profile'),
-            child: CircleAvatar(
+            child: AppPhotoCircle(
               radius: 16,
-              backgroundColor: AppColors.primaryTeal.withValues(alpha: 0.15),
-              child: Text(
+              url: user?.fotoUrl,
+              backgroundColor: AppColors.primaryTeal,
+              fallback: Text(
                 initial,
                 style: const TextStyle(
                   fontSize: 14,
