@@ -31,6 +31,7 @@ class _SalesListScreenState extends ConsumerState<SalesListScreen> {
       appBar: const DetailAppBar(title: 'Penjualan'),
       floatingActionButton: canCreate
           ? FloatingActionButton(
+              heroTag: null,
               onPressed: () => context.push(AppRoutes.saleNew),
               backgroundColor: AppColors.darkCard,
               child: const Icon(Icons.add, color: Colors.white),

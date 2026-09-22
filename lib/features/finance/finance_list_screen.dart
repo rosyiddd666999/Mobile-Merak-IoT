@@ -30,6 +30,7 @@ class FinanceListScreen extends ConsumerWidget {
       appBar: const RootAppBar(title: 'Keuangan'),
       floatingActionButton: canCreate
           ? FloatingActionButton(
+              heroTag: null,
               onPressed: () => context.push(AppRoutes.financeNew),
               backgroundColor: AppColors.darkCard,
               child: const Icon(Icons.add, color: Colors.white),

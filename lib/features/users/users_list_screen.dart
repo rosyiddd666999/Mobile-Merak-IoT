@@ -23,6 +23,7 @@ class UsersListScreen extends ConsumerWidget {
       appBar: const DetailAppBar(title: 'Pengguna'),
       floatingActionButton: canCreate
           ? FloatingActionButton.extended(
+              heroTag: null,
               onPressed: () => context.push(AppRoutes.userNew),
               icon: const Icon(Icons.person_add),
               label: const Text('Tambah'),

@@ -40,6 +40,7 @@ class EggsListScreen extends ConsumerWidget {
       appBar: const RootAppBar(title: 'Telur'),
       floatingActionButton: canCreate
           ? FloatingActionButton(
+              heroTag: null,
               onPressed: () => context.push(AppRoutes.eggNew),
               backgroundColor: AppColors.darkCard,
               child: const Icon(Icons.add, color: Colors.white),

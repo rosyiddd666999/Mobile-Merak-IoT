@@ -21,6 +21,7 @@ class ChicksListScreen extends ConsumerWidget {
       appBar: const DetailAppBar(title: 'Data Anakan'),
       floatingActionButton: canCreate
           ? FloatingActionButton.extended(
+              heroTag: null,
               onPressed: () => context.push(AppRoutes.chickNew),
               icon: const Icon(Icons.add),
               label: const Text('Tambah'),

@@ -50,6 +50,7 @@ class _BreedersListScreenState extends ConsumerState<BreedersListScreen> {
       appBar: const RootAppBar(title: 'Indukan'),
       floatingActionButton: canCreate
           ? FloatingActionButton(
+              heroTag: null,
               onPressed: () => context.push(AppRoutes.breederNew),
               backgroundColor: AppColors.darkCard,
               child: const Icon(Icons.add, color: Colors.white),
