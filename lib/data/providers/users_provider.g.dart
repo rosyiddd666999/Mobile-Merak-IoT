@@ -23,7 +23,7 @@ final usersListProvider = FutureProvider<List<User>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef UsersListRef = FutureProviderRef<List<User>>;
-String _$userCreateHash() => r'2fbf03e15c677fca39179fb9ac8a4786ab8e7930';
+String _$userCreateHash() => r'5691bd0f835248156529b94159a3cbdb96243cc4';
 
 /// See also [UserCreate].
 @ProviderFor(UserCreate)
@@ -38,6 +38,21 @@ final userCreateProvider = AsyncNotifierProvider<UserCreate, User?>.internal(
 );
 
 typedef _$UserCreate = AsyncNotifier<User?>;
+String _$userUpdateHash() => r'dd00858148bebe4ef3a579c69a2228c1f548050a';
+
+/// See also [UserUpdate].
+@ProviderFor(UserUpdate)
+final userUpdateProvider = AsyncNotifierProvider<UserUpdate, User?>.internal(
+  UserUpdate.new,
+  name: r'userUpdateProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$userUpdateHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$UserUpdate = AsyncNotifier<User?>;
 String _$userDeleteHash() => r'fbc3bcfd0a777619f83dd78fc82f1a0d25534863';
 
 /// See also [UserDelete].

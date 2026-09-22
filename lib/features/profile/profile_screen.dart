@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/network/app_failure.dart';
 import '../../core/theme.dart';
+import '../../data/providers/api_client_provider.dart';
 import '../../data/providers/auth_provider.dart';
+import '../../data/providers/users_provider.dart';
+import '../../data/services/upload_service.dart';
 import '../../shared/app_photo.dart';
+import '../../shared/app_photo_picker.dart';
 import '../../shared/detail_app_bar.dart';
 import 'widgets/api_key_settings.dart';
 
@@ -26,11 +31,31 @@ class ProfileScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  AppPhotoCircle(
-                    radius: 28,
-                    url: user?.fotoUrl,
-                    backgroundColor: AppColors.primaryTeal,
-                    fallback: const Icon(Icons.person, size: 28),
+                  Stack(
+                    children: [
+                      AppPhotoCircle(
+                        radius: 28,
+                        url: user?.fotoUrl,
+                        backgroundColor: AppColors.primaryTeal,
+                        fallback: const Icon(Icons.person, size: 28),
+                      ),
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: InkWell(
+                          onTap: () => _editPhoto(context, ref),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: AppColors.darkCard,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.edit,
+                                size: 14, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(width: 16),
                   Column(
@@ -83,6 +108,91 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// Ubah foto profil: picker (galeri/kamera) -> upload -> PUT.
+  /// Backend membatasi PUT users untuk pemilik — staff mendapat pesan jelas.
+  Future<void> _editPhoto(BuildContext context, WidgetRef ref) async {
+    final me = ref.read(currentUserProvider);
+    if (me == null) return;
+    PickedPhoto? picked;
+    final save = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppPhotoPicker(
+              label: 'Foto Profil',
+              initialUrl: me.fotoUrl,
+              folder: UploadFolder.profile,
+              onChanged: (p) => picked = p,
+            ),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Simpan Foto'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (save != true || picked == null || !context.mounted) return;
+
+    String? fotoUrl = picked!.url;
+    if (picked!.file != null) {
+      try {
+        final up = await UploadService(ref.read(apiClientProvider))
+            .uploadPhoto(picked!.file!, UploadFolder.profile);
+        fotoUrl = up.url;
+      } catch (e) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload foto gagal: ${AppFailure.from(e, action: 'mengunggah foto').message}')),
+        );
+        return;
+      }
+    }
+
+    final updated = await ref
+        .read(userUpdateProvider.notifier)
+        .updateUser(id: me.id, fotoUrl: fotoUrl ?? '');
+    if (!context.mounted) return;
+    if (updated == null) {
+      final err = ref.read(userUpdateProvider).error;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(err != null
+              ? AppFailure.from(err, action: 'mengubah foto profil').message
+              : 'Gagal mengubah foto profil'),
+          backgroundColor: AppColors.critical,
+        ),
+      );
+      return;
+    }
+    ref.read(currentUserProvider.notifier).state = updated;
+    ref.invalidate(usersListProvider);
+    ref.read(userUpdateProvider.notifier).reset();
+
+    // Bersihkan file lama bila diganti (BACKEND.md §13.3).
+    final oldKey = UploadService.objectKeyFromUrl(me.fotoUrl);
+    if (oldKey != null &&
+        oldKey.isNotEmpty &&
+        me.fotoUrl != updated.fotoUrl) {
+      UploadService(ref.read(apiClientProvider)).deletePhoto(oldKey);
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Foto profil diperbarui')),
     );
   }
 }

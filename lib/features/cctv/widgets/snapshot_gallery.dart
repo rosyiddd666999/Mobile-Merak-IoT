@@ -69,52 +69,83 @@ class SnapshotGallery extends ConsumerWidget {
     );
   }
 
-  void _openViewer(BuildContext context, CctvSnapshot snap) {
-    final label = snap.capturedAt != null
-        ? formatDateTime(snap.capturedAt!.toIso8601String())
-        : '-';
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        insetPadding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(12)),
-              child: CachedNetworkImage(
-                imageUrl: snap.url,
-                fit: BoxFit.contain,
-                placeholder: (_, _) => const SizedBox(
-                  height: 200,
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                errorWidget: (_, _, _) => const SizedBox(
-                  height: 200,
-                  child: Center(child: Icon(Icons.broken_image_outlined)),
-                ),
+  void _openViewer(BuildContext context, CctvSnapshot snap) =>
+      showSnapshotViewer(context, snap);
+}
+
+/// Dialog detail gambar snapshot: pratinjau + metadata (waktu, sumber, ID).
+/// Dipakai galeri dan card CCTV Live.
+void showSnapshotViewer(BuildContext context, CctvSnapshot snap) {
+  final label = snap.capturedAt != null
+      ? formatDateTime(snap.capturedAt!.toIso8601String())
+      : '-';
+  showDialog(
+    context: context,
+    builder: (ctx) => Dialog(
+      insetPadding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClipRRect(
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(12)),
+            child: CachedNetworkImage(
+              imageUrl: snap.url,
+              fit: BoxFit.contain,
+              placeholder: (_, _) => const SizedBox(
+                height: 200,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              errorWidget: (_, _, _) => const SizedBox(
+                height: 200,
+                child: Center(child: Icon(Icons.broken_image_outlined)),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(label,
-                        style: const TextStyle(
-                            fontSize: 12, color: AppColors.textMuted)),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(),
-                    child: const Text('Tutup'),
-                  ),
-                ],
-              ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _metaRow('Waktu', label),
+                _metaRow('Sumber', snap.source ?? '-'),
+                _metaRow('ID', '#${snap.id}'),
+                Row(
+                  children: [
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: const Text('Tutup'),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
+Widget _metaRow(String label, String value) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 4),
+    child: Row(
+      children: [
+        SizedBox(
+          width: 56,
+          child: Text(label,
+              style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
+        ),
+        Expanded(
+          child: Text(value,
+              style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textDark)),
+        ),
+      ],
+    ),
+  );
 }

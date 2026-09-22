@@ -39,7 +39,7 @@ class UserCreate extends _$UserCreate {
         'email': email,
         'password': password,
         'role': role,
-        if (fotoUrl != null && fotoUrl.isNotEmpty) ...{
+        if (fotoUrl?.isNotEmpty ?? false) ...{
           'avatar_url': fotoUrl,
           'image_url': fotoUrl,
         },
@@ -47,6 +47,44 @@ class UserCreate extends _$UserCreate {
       final created = User.fromJson(response.data);
       state = AsyncData(created);
       return created;
+    } on DioException catch (e, st) {
+      state = AsyncError(e, st);
+      return null;
+    }
+  }
+
+  void reset() {
+    state = const AsyncData(null);
+  }
+}
+
+@Riverpod(keepAlive: true)
+class UserUpdate extends _$UserUpdate {
+  @override
+  Future<User?> build() async => null;
+
+  /// Ubah profil (nama/foto). `PUT /api/users/{id}` pemilik-only —
+  /// staff ditolak 403 (pesan spesifik via AppFailure di UI).
+  Future<User?> updateUser({
+    required String id,
+    String? nama,
+    String? fotoUrl,
+  }) async {
+    state = const AsyncLoading();
+    final dio = ref.read(apiClientProvider);
+    final data = <String, dynamic>{
+      if (nama != null) 'nama': nama,
+    };
+    // String kosong = bersihkan foto; null = tak diubah.
+    if (fotoUrl != null) {
+      data['avatar_url'] = fotoUrl;
+      data['image_url'] = fotoUrl;
+    }
+    try {
+      final response = await dio.put('/api/users/$id', data: data);
+      final updated = User.fromJson(response.data as Map<String, dynamic>);
+      state = AsyncData(updated);
+      return updated;
     } on DioException catch (e, st) {
       state = AsyncError(e, st);
       return null;

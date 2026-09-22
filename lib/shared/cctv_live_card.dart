@@ -1,13 +1,16 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/constants.dart';
 import '../core/theme.dart';
+import '../core/utils/date_formatter.dart';
 import '../data/providers/api_client_provider.dart';
 import '../data/providers/cctv_provider.dart';
 import '../data/services/cctv_service.dart';
 import '../features/cctv/widgets/cctv_status_badge.dart';
 import '../features/cctv/widgets/mjpeg_view.dart';
+import '../features/cctv/widgets/snapshot_gallery.dart';
 
 /// Kartu CCTV live reusable (stream MJPEG + badge + pilih feed).
 /// Dipakai di tab Inkubator; rute /cctv tetap ada untuk layar penuh.
@@ -125,7 +128,7 @@ class _CctvLiveCardState extends ConsumerState<CctvLiveCard> {
           ),
           Container(
             height: widget.height,
-            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             decoration: BoxDecoration(
               color: Colors.black,
               borderRadius: BorderRadius.circular(AppRadius.cardSmall),
@@ -150,8 +153,97 @@ class _CctvLiveCardState extends ConsumerState<CctvLiveCard> {
                     },
                   ),
           ),
+          const _LatestSnapshotRow(),
+          const SizedBox(height: 8),
         ],
       ),
+    );
+  }
+}
+
+/// Baris snapshot terbaru di card: thumbnail + tombol detail + riwayat.
+/// Sembunyi total bila kosong/gagal agar card tetap ramping.
+class _LatestSnapshotRow extends ConsumerWidget {
+  const _LatestSnapshotRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(cctvSnapshotsProvider);
+    return async.maybeWhen(
+      data: (items) {
+        if (items.isEmpty) return const SizedBox.shrink();
+        final snap = items.first;
+        final label = snap.capturedAt != null
+            ? formatDateTime(snap.capturedAt!.toIso8601String())
+            : 'Snapshot terbaru';
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+          child: Row(
+            children: [
+              InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => showSnapshotViewer(context, snap),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: CachedNetworkImage(
+                    imageUrl: snap.url,
+                    width: 56,
+                    height: 56,
+                    fit: BoxFit.cover,
+                    placeholder: (_, _) => Container(
+                      width: 56,
+                      height: 56,
+                      color: AppColors.primaryTeal.withValues(alpha: 0.1),
+                      child: const Icon(Icons.image_outlined,
+                          color: AppColors.textMuted),
+                    ),
+                    errorWidget: (_, _, _) => Container(
+                      width: 56,
+                      height: 56,
+                      color: AppColors.bg,
+                      child: const Icon(Icons.broken_image_outlined,
+                          color: AppColors.textMuted),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Snapshot Terbaru',
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      label,
+                      style: const TextStyle(
+                          fontSize: 11, color: AppColors.textMuted),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () => showSnapshotViewer(context, snap),
+                child: const Text('Lihat Detail'),
+              ),
+              IconButton(
+                icon: const Icon(Icons.photo_library_outlined, size: 20),
+                tooltip: 'Riwayat snapshot',
+                onPressed: () => context.push('/cctv'),
+              ),
+            ],
+          ),
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
     );
   }
 }
