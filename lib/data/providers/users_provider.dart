@@ -77,7 +77,7 @@ class UserUpdate extends _$UserUpdate {
     };
     // String kosong = bersihkan foto; null = tak diubah.
     final photo = fotoUrl;
-    // ignore: use_null_aware_elements — conditional map keys tak punya padanan ?.
+    // ignore: use_null_aware_elements
     if (photo != null) {
       data['avatar_url'] = photo;
       data['image_url'] = photo;
