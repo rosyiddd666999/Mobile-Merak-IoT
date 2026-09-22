@@ -2,8 +2,21 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
 
-/// Foto lingkaran dengan fallback: tampilkan [fallback] bila [url] kosong
-/// atau gagal dimuat. Dipakai avatar user/chick/breeder.
+/// Bersihkan URL: trim + anggap kosong bila hanya spasi.
+String? _cleanUrl(String? url) {
+  final v = url?.trim() ?? '';
+  return v.isEmpty ? null : v;
+}
+
+/// Ikon penanda "URL ada tapi gagal dimuat" (bedakan dari "belum ada foto").
+Widget _brokenIcon(double size, Color color) => Icon(
+      Icons.broken_image_outlined,
+      size: size,
+      color: color,
+    );
+
+/// Foto lingkaran: tampilkan foto bila URL valid, [fallback] bila kosong,
+/// ikon rusak bila URL ada tapi gagal dimuat. Dipakai avatar user/chick/breeder.
 class AppPhotoCircle extends StatelessWidget {
   final String? url;
   final double radius;
@@ -21,22 +34,26 @@ class AppPhotoCircle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = backgroundColor.withValues(alpha: 0.12);
-    if (url == null || url!.isEmpty) {
+    final clean = _cleanUrl(url);
+    if (clean == null) {
       return CircleAvatar(radius: radius, backgroundColor: bg, child: fallback);
     }
     return CachedNetworkImage(
-      imageUrl: url!,
+      imageUrl: clean,
       imageBuilder: (_, provider) =>
           CircleAvatar(radius: radius, backgroundImage: provider),
       placeholder: (_, _) => CircleAvatar(
           radius: radius, backgroundColor: bg, child: fallback),
-      errorWidget: (_, _, _) =>
-          CircleAvatar(radius: radius, backgroundColor: bg, child: fallback),
+      errorWidget: (_, _, _) => CircleAvatar(
+        radius: radius,
+        backgroundColor: AppColors.statusAlert.withValues(alpha: 0.1),
+        child: _brokenIcon(radius, AppColors.statusAlert),
+      ),
     );
   }
 }
 
-/// Foto kotak leading card dengan fallback ikon.
+/// Foto kotak leading card: perilaku sama dengan [AppPhotoCircle].
 class AppPhotoBox extends StatelessWidget {
   final String? url;
   final double size;
@@ -51,7 +68,8 @@ class AppPhotoBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (url == null || url!.isEmpty) {
+    final clean = _cleanUrl(url);
+    if (clean == null) {
       return Container(
         width: size,
         height: size,
@@ -65,7 +83,7 @@ class AppPhotoBox extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: CachedNetworkImage(
-        imageUrl: url!,
+        imageUrl: clean,
         width: size,
         height: size,
         fit: BoxFit.cover,
@@ -79,10 +97,11 @@ class AppPhotoBox extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: AppColors.primaryTeal.withValues(alpha: 0.1),
+            color: AppColors.statusAlert.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: fallback,
+          child: _brokenIcon(
+              size * 0.5, AppColors.statusAlert),
         ),
       ),
     );
