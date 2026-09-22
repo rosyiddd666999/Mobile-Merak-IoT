@@ -72,15 +72,12 @@ class UserUpdate extends _$UserUpdate {
   }) async {
     state = const AsyncLoading();
     final dio = ref.read(apiClientProvider);
+    // null = tak diubah; string kosong = bersihkan foto.
     final data = <String, dynamic>{
-      if (nama case final n?) 'nama': n,
-    };
-    // String kosong = bersihkan foto; null = tak diubah.
-    final photo = fotoUrl;
-    if (photo != null) {
-      data['avatar_url'] = photo;
-      data['image_url'] = photo;
-    }
+      'nama': nama,
+      'avatar_url': fotoUrl,
+      'image_url': fotoUrl,
+    }..removeWhere((_, v) => v == null);
     try {
       final response = await dio.put('/api/users/$id', data: data);
       final updated = User.fromJson(response.data as Map<String, dynamic>);
