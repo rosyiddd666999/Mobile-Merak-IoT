@@ -21,7 +21,11 @@ class ChickCard extends StatelessWidget {
       leading: AppPhotoBox(
         size: 48,
         url: chick.fotoUrl,
-        fallback: const Icon(Icons.cruelty_free, color: AppColors.tertiary, size: 24),
+        fallback: const Icon(
+          Icons.flutter_dash,
+          color: AppColors.tertiary,
+          size: 24,
+        ),
       ),
       title: chick.id,
       subtitle:
@@ -33,7 +37,10 @@ class ChickCard extends StatelessWidget {
           Flexible(
             child: Text(
               chick.skorKesehatan,
-              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ),

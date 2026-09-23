@@ -29,14 +29,13 @@ class EggDetailScreen extends ConsumerWidget {
     final breedersAsync = ref.watch(breedersListProvider);
     final chicksAsync = ref.watch(chicksListProvider);
     final user = ref.watch(currentUserProvider);
-    final canDelete =
-        user?.role == 'pemilik' || user?.role == 'staff';
+    final canDelete = user?.role == 'pemilik' || user?.role == 'staff';
 
     return Scaffold(
       appBar: const DetailAppBar(title: 'Detail Telur'),
       body: AsyncStateView(
         async: eggAsync,
-          actionLabel: 'memuat detail telur',
+        actionLabel: 'memuat detail telur',
         onRetry: () => ref.refresh(eggDetailProvider(id)),
         dataBuilder: (egg) {
           final breeders = breedersAsync.valueOrNull ?? const [];
@@ -123,10 +122,7 @@ class EggDetailScreen extends ConsumerWidget {
                               spacing: 6,
                               runSpacing: 4,
                               children: [
-                                StatusChip(
-                                  label: fertil.$1,
-                                  status: fertil.$2,
-                                ),
+                                StatusChip(label: fertil.$1, status: fertil.$2),
                                 StatusChip(
                                   label: outcome.$1,
                                   status: outcome.$2,
@@ -151,19 +147,29 @@ class EggDetailScreen extends ConsumerWidget {
                         DetailRow(
                           icon: Icons.male,
                           label: 'Indukan Jantan',
-                          value: _parentDisplay(egg.indukJantanId, names[egg.indukJantanId]),
+                          value: _parentDisplay(
+                            egg.indukJantanId,
+                            names[egg.indukJantanId],
+                          ),
                           onTap: egg.indukJantanId.isEmpty
                               ? null
-                              : () => context.push(AppRoutes.breederDetail(egg.indukJantanId)),
+                              : () => context.push(
+                                  AppRoutes.breederDetail(egg.indukJantanId),
+                                ),
                         ),
                         const DetailDivider(),
                         DetailRow(
                           icon: Icons.female,
                           label: 'Indukan Betina',
-                          value: _parentDisplay(egg.indukBetinaId, names[egg.indukBetinaId]),
+                          value: _parentDisplay(
+                            egg.indukBetinaId,
+                            names[egg.indukBetinaId],
+                          ),
                           onTap: egg.indukBetinaId.isEmpty
                               ? null
-                              : () => context.push(AppRoutes.breederDetail(egg.indukBetinaId)),
+                              : () => context.push(
+                                  AppRoutes.breederDetail(egg.indukBetinaId),
+                                ),
                         ),
                       ],
                     ),
@@ -173,9 +179,7 @@ class EggDetailScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               DetailSection(
                 title: 'Perkembangan',
-                children: [
-                  _growthCard(egg),
-                ],
+                children: [_growthCard(egg)],
               ),
               if (anak.isNotEmpty) ...[
                 const SizedBox(height: 16),
@@ -194,32 +198,49 @@ class EggDetailScreen extends ConsumerWidget {
                                 width: 38,
                                 height: 38,
                                 decoration: BoxDecoration(
-                                  color: AppColors.primaryTeal.withValues(alpha: 0.1),
+                                  color: AppColors.primaryTeal.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: const Icon(Icons.cruelty_free,
-                                    size: 19, color: AppColors.primaryTeal),
+                                child: const Icon(
+                                  Icons.flutter_dash,
+                                  size: 19,
+                                  color: AppColors.primaryTeal,
+                                ),
                               ),
                               title: Text(
                                 anak[i].id,
                                 style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textDark),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textDark,
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               subtitle: Text(
                                 '${formatDate(anak[i].tanggalMenetas)} · ${anak[i].beratAwal.toStringAsFixed(0)}g',
                                 style: const TextStyle(
-                                    fontSize: 11, color: AppColors.textMuted),
+                                  fontSize: 11,
+                                  color: AppColors.textMuted,
+                                ),
                               ),
-                              trailing: const Icon(Icons.chevron_right,
-                                  size: 18, color: AppColors.textMuted),
-                              onTap: () => context.push(AppRoutes.chickDetail(anak[i].id)),
+                              trailing: const Icon(
+                                Icons.chevron_right,
+                                size: 18,
+                                color: AppColors.textMuted,
+                              ),
+                              onTap: () => context.push(
+                                AppRoutes.chickDetail(anak[i].id),
+                              ),
                             ),
                             if (i < anak.length - 1)
-                              const Divider(height: 1, indent: 16, endIndent: 16),
+                              const Divider(
+                                height: 1,
+                                indent: 16,
+                                endIndent: 16,
+                              ),
                           ],
                         ],
                       ),
@@ -233,7 +254,8 @@ class EggDetailScreen extends ConsumerWidget {
               ],
               const SizedBox(height: 24),
               OutlinedButton.icon(
-                onPressed: () => context.push('${AppRoutes.eggDetail(egg.id)}/edit'),
+                onPressed: () =>
+                    context.push('${AppRoutes.eggDetail(egg.id)}/edit'),
                 icon: const Icon(Icons.edit_outlined),
                 label: const Text('Edit nomor'),
               ),
@@ -249,8 +271,10 @@ class EggDetailScreen extends ConsumerWidget {
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.delete_outline,
-                          color: AppColors.critical),
+                      : const Icon(
+                          Icons.delete_outline,
+                          color: AppColors.critical,
+                        ),
                   label: Text(
                     deleting ? 'Menghapus…' : 'Hapus telur',
                     style: const TextStyle(color: AppColors.critical),
@@ -306,9 +330,9 @@ class EggDetailScreen extends ConsumerWidget {
     ref.invalidate(eggsListProvider);
     ref.invalidate(dashboardProvider);
     ref.read(eggDeleteProvider.notifier).reset();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Telur berhasil dihapus')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Telur berhasil dihapus')));
     context.pop();
   }
 
@@ -336,13 +360,13 @@ class EggDetailScreen extends ConsumerWidget {
                 finished && akhir == 'menetas'
                     ? Icons.check_circle
                     : finished
-                        ? Icons.cancel_outlined
-                        : Icons.help_outline,
+                    ? Icons.cancel_outlined
+                    : Icons.help_outline,
                 color: finished && akhir == 'menetas'
                     ? AppColors.statusActive
                     : finished
-                        ? AppColors.statusAlert
-                        : AppColors.textMuted,
+                    ? AppColors.statusAlert
+                    : AppColors.textMuted,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -350,7 +374,10 @@ class EggDetailScreen extends ConsumerWidget {
                   finished
                       ? 'Siklus selesai: ${outcome.$1}'
                       : 'Tanggal masuk belum valid',
-                  style: const TextStyle(fontSize: 13, color: AppColors.textDark),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textDark,
+                  ),
                 ),
               ),
             ],
@@ -372,9 +399,10 @@ class EggDetailScreen extends ConsumerWidget {
                   child: Text(
                     'Hari ke-${days + 1} dari 28',
                     style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textDark),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
+                    ),
                   ),
                 ),
                 StatusChip(label: 'Proses', status: AppStatus.pending),
@@ -386,10 +414,8 @@ class EggDetailScreen extends ConsumerWidget {
               child: LinearProgressIndicator(
                 value: (days + 1) / 28,
                 minHeight: 8,
-                backgroundColor:
-                    AppColors.primaryTeal.withValues(alpha: 0.15),
-                valueColor: const AlwaysStoppedAnimation(
-                    AppColors.primaryTeal),
+                backgroundColor: AppColors.primaryTeal.withValues(alpha: 0.15),
+                valueColor: const AlwaysStoppedAnimation(AppColors.primaryTeal),
               ),
             ),
           ],

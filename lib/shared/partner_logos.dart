@@ -9,6 +9,7 @@ class PartnerLogos extends StatelessWidget {
   final bool showLabel;
   final bool wide;
   final MainAxisAlignment alignment;
+  final bool withoutBackground;
 
   const PartnerLogos({
     super.key,
@@ -16,9 +17,10 @@ class PartnerLogos extends StatelessWidget {
     this.showLabel = false,
     this.wide = false,
     this.alignment = MainAxisAlignment.center,
+    this.withoutBackground = false,
   });
 
-  static const _squareLogo = 'assets/images/logo-kel-merak.jpeg';
+  static const _squareLogo = 'assets/images/logo-kel-merak.png';
   static const _wideLogo = 'assets/images/logo-pertamina.png';
 
   Widget _box(String asset, {required double width, required double height}) {
@@ -26,11 +28,13 @@ class PartnerLogos extends StatelessWidget {
       width: width,
       height: height,
       padding: EdgeInsets.all(size * 0.2),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(size * 0.25),
-        border: Border.all(color: const Color(0xFFE6ECEA)),
-      ),
+      decoration: withoutBackground
+          ? null
+          : BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(size * 0.25),
+              border: Border.all(color: const Color(0xFFE6ECEA)),
+            ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(size * 0.05),
         child: Image.asset(asset, fit: BoxFit.contain),

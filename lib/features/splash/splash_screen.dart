@@ -20,7 +20,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Timer? _timer;
   bool _resolved = false;
   bool _ready = false;
-  String? _pendingRoute; // '/dashboard' | '/login' — dieksekusi saat waktunya tiba
+  String?
+  _pendingRoute; // '/dashboard' | '/login' — dieksekusi saat waktunya tiba
   late final AnimationController _anim;
   late final Animation<double> _logoScale;
   late final Animation<double> _logoFade;
@@ -44,34 +45,36 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         curve: const Interval(0.0, 0.5, curve: Curves.easeOutBack),
       ),
     );
-    _logoFade = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _anim, curve: const Interval(0.0, 0.35)),
-    );
-    _titleSlide = Tween<Offset>(
-      begin: const Offset(0, 0.4),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-          parent: _anim,
-          curve: const Interval(0.25, 0.6, curve: Curves.easeOut)),
-    );
-    _titleFade = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _anim, curve: const Interval(0.25, 0.6)),
-    );
-    _subtitleSlide = Tween<Offset>(
-      begin: const Offset(0, 0.4),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-          parent: _anim,
-          curve: const Interval(0.4, 0.75, curve: Curves.easeOut)),
-    );
-    _subtitleFade = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _anim, curve: const Interval(0.4, 0.75)),
-    );
-    _loadingFade = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _anim, curve: const Interval(0.65, 1.0)),
-    );
+    _logoFade = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _anim, curve: const Interval(0.0, 0.35)));
+    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.4), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _anim,
+            curve: const Interval(0.25, 0.6, curve: Curves.easeOut),
+          ),
+        );
+    _titleFade = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _anim, curve: const Interval(0.25, 0.6)));
+    _subtitleSlide =
+        Tween<Offset>(begin: const Offset(0, 0.4), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _anim,
+            curve: const Interval(0.4, 0.75, curve: Curves.easeOut),
+          ),
+        );
+    _subtitleFade = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _anim, curve: const Interval(0.4, 0.75)));
+    _loadingFade = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _anim, curve: const Interval(0.65, 1.0)));
     _partnersFade = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _anim, curve: const Interval(0.60, 0.85)),
     );
@@ -149,7 +152,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [AppColors.primaryDark, AppColors.primary],
+            colors: [AppColors.primaryLight, AppColors.primary],
           ),
         ),
         child: SafeArea(
@@ -174,6 +177,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         size: 56,
                         wide: true,
                         alignment: MainAxisAlignment.spaceBetween,
+                        withoutBackground: true,
                       ),
                     ],
                   ),
@@ -217,9 +221,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                             child: Text(
                               'Media Edukasi Kampung Merak Gentan Hijau Berseri',
                               textAlign: TextAlign.center,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineMedium
+                              style: Theme.of(context).textTheme.headlineMedium
                                   ?.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w700,
@@ -238,9 +240,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                 Text(
                                   'Kerjasama',
                                   textAlign: TextAlign.center,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
+                                  style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(
                                         color: Colors.white60,
                                         letterSpacing: 0.5,
@@ -250,9 +250,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                 Text(
                                   'PT Pertamina Patra Niaga FT Madiun',
                                   textAlign: TextAlign.center,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
+                                  style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(
                                         color: Colors.white70,
                                         letterSpacing: 0.5,

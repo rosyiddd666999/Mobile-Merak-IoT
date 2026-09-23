@@ -94,27 +94,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (GoRouterState.of(context).uri.queryParameters['expired'] == '1') ...[
+                if (GoRouterState.of(context).uri.queryParameters['expired'] ==
+                    '1') ...[
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.warning.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                          color: AppColors.warning.withValues(alpha: 0.4)),
+                        color: AppColors.warning.withValues(alpha: 0.4),
+                      ),
                     ),
                     child: const Row(
                       children: [
-                        Icon(Icons.lock_outline,
-                            size: 18, color: AppColors.warning),
+                        Icon(
+                          Icons.lock_outline,
+                          size: 18,
+                          color: AppColors.warning,
+                        ),
                         SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'Sesi berakhir, silakan masuk kembali',
                             style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textDark),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textDark,
+                            ),
                           ),
                         ),
                       ],
@@ -122,7 +131,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 16),
                 ],
-                const SizedBox(height: 32),                Center(
+                const SizedBox(height: 32),
+                Center(
                   child: Container(
                     width: 96,
                     height: 96,
@@ -177,12 +187,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 32),
                 const Center(child: PartnerLogos(size: 84, showLabel: true)),
-                const SizedBox(height: 16),
-                const Text(
-                  'MerakNK v1.0.0',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 11, color: AppColors.textMuted),
-                ),
               ],
             ),
           ),

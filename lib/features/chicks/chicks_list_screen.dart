@@ -33,7 +33,7 @@ class ChicksListScreen extends ConsumerWidget {
           async: chicksAsync,
           actionLabel: 'memuat data anakan',
           loadingMessage: 'Memuat data anakan...',
-          emptyIcon: Icons.cruelty_free,
+          emptyIcon: Icons.flutter_dash,
           emptyMessage: 'Belum ada data anakan',
           onRetry: () => ref.refresh(chicksListProvider),
           isEmpty: (chicks) => chicks.isEmpty,

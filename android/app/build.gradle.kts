@@ -65,6 +65,6 @@ flutter {
 
 dependencies {
     // ...
-    implementation("com.google.android.material:material:1.1.0")
+    implementation("com.google.android.material:material:1.2.0")
     // ...
 }

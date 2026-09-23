@@ -13,6 +13,7 @@ class AppRoutes {
   static const alerts = '/alerts';
   static const cctv = '/cctv';
   static const profile = '/profile';
+  static const about = '/about';
   static const login = '/login';
 
   static String breederDetail(String id) => '$breeders/$id';

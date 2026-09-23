@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:printing/printing.dart';
 import '../../core/app_routes.dart';
 import '../../core/theme.dart';
 import '../../core/utils/number_formatter.dart';
@@ -12,6 +13,7 @@ import '../../data/providers/auth_provider.dart';
 import '../../shared/async_state_view.dart';
 import '../../shared/design_kit.dart';
 import '../../shared/root_app_bar.dart';
+import 'finance_report_pdf.dart';
 import 'widgets/finance_entry_card.dart';
 
 /// Keuangan (DESIGN.md §4): hero valuasi, banner BKSDA, komersial horizontal,
@@ -313,11 +315,41 @@ class _ProductCard extends StatelessWidget {
   }
 }
 
-/// 1 card 4 baris list (DESIGN.md §4.5) — salin CSV ke clipboard.
-class _ExportCard extends StatelessWidget {
+/// 1 card 4 baris list (DESIGN.md §4.5) — salin CSV ke clipboard
+/// + ekspor PDF langsung (preview/share/print via paket printing).
+class _ExportCard extends StatefulWidget {
   final List<FinanceEntry> entries;
 
   const _ExportCard({required this.entries});
+
+  @override
+  State<_ExportCard> createState() => _ExportCardState();
+}
+
+class _ExportCardState extends State<_ExportCard> {
+  /// Jenis laporan yang sedang dibuat PDF-nya (null = idle).
+  String? _exportingKind;
+
+  List<FinanceEntry> get entries => widget.entries;
+
+  Future<void> _exportPdf(String kind) async {
+    if (_exportingKind != null) return;
+    setState(() => _exportingKind = kind);
+    try {
+      final bytes = await buildFinanceReportPdf(kind: kind, entries: entries);
+      await Printing.layoutPdf(
+        onLayout: (_) async => bytes,
+        name: 'laporan-${kind.toLowerCase().replaceAll(' ', '-')}.pdf',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal membuat PDF: $e')));
+    } finally {
+      if (mounted) setState(() => _exportingKind = null);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -356,22 +388,49 @@ class _ExportCard extends StatelessWidget {
                   color: AppColors.textMuted,
                 ),
               ),
-              trailing: IconButton(
-                icon: const Icon(
-                  Icons.copy,
-                  size: 20,
-                  color: AppColors.primaryTeal,
-                ),
-                tooltip: 'Salin CSV',
-                onPressed: () {
-                  final csv = _buildCsv(reports[i]);
-                  Clipboard.setData(ClipboardData(text: csv));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Laporan ${reports[i]} disalin (CSV)'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.copy,
+                      size: 20,
+                      color: AppColors.primaryTeal,
                     ),
-                  );
-                },
+                    tooltip: 'Salin CSV',
+                    onPressed: () {
+                      final csv = _buildCsv(reports[i]);
+                      Clipboard.setData(ClipboardData(text: csv));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Laporan ${reports[i]} disalin (CSV)'),
+                        ),
+                      );
+                    },
+                  ),
+                  if (_exportingKind == reports[i])
+                    const SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: Center(
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    )
+                  else
+                    IconButton(
+                      icon: const Icon(
+                        Icons.picture_as_pdf_outlined,
+                        size: 20,
+                        color: AppColors.primaryTeal,
+                      ),
+                      tooltip: 'Ekspor PDF',
+                      onPressed: () => _exportPdf(reports[i]),
+                    ),
+                ],
               ),
             ),
             if (i < reports.length - 1)

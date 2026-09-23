@@ -51,8 +51,11 @@ class ProfileScreen extends ConsumerWidget {
                               color: AppColors.darkCard,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.edit,
-                                size: 14, color: Colors.white),
+                            child: const Icon(
+                              Icons.edit,
+                              size: 14,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -62,10 +65,28 @@ class ProfileScreen extends ConsumerWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(user?.nama ?? 'Pengguna', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                      Text(user?.email ?? '', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                      Text(
+                        user?.nama ?? 'Pengguna',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        user?.email ?? '',
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Chip(label: Text(user?.role ?? '', style: const TextStyle(fontSize: 12)), visualDensity: VisualDensity.compact),
+                      Chip(
+                        label: Text(
+                          user?.role ?? '',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        visualDensity: VisualDensity.compact,
+                      ),
                     ],
                   ),
                 ],
@@ -81,7 +102,10 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 if (canEdit)
                   ListTile(
-                    leading: const Icon(Icons.thermostat, color: AppColors.primary),
+                    leading: const Icon(
+                      Icons.thermostat,
+                      color: AppColors.primary,
+                    ),
                     title: const Text('Pengaturan Inkubator'),
                     trailing: const Icon(Icons.chevron_right, size: 18),
                     onTap: () => context.push('/incubator/settings'),
@@ -93,6 +117,15 @@ class ProfileScreen extends ConsumerWidget {
                     trailing: const Icon(Icons.chevron_right, size: 18),
                     onTap: () => context.push('/users'),
                   ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.info_outline,
+                    color: AppColors.primary,
+                  ),
+                  title: const Text('Informasi Aplikasi'),
+                  trailing: const Icon(Icons.chevron_right, size: 18),
+                  onTap: () => context.push('/about'),
+                ),
               ],
             ),
           ),
@@ -100,7 +133,10 @@ class ProfileScreen extends ConsumerWidget {
           Card(
             child: ListTile(
               leading: const Icon(Icons.logout, color: AppColors.critical),
-              title: const Text('Keluar', style: TextStyle(color: AppColors.critical)),
+              title: const Text(
+                'Keluar',
+                style: TextStyle(color: AppColors.critical),
+              ),
               onTap: () async {
                 await ref.read(authProvider.notifier).logout();
                 if (context.mounted) context.go('/login');
@@ -153,13 +189,18 @@ class ProfileScreen extends ConsumerWidget {
     String? fotoUrl = picked!.url;
     if (picked!.file != null) {
       try {
-        final up = await UploadService(ref.read(apiClientProvider))
-            .uploadPhoto(picked!.file!, UploadFolder.profile);
+        final up = await UploadService(
+          ref.read(apiClientProvider),
+        ).uploadPhoto(picked!.file!, UploadFolder.profile);
         fotoUrl = up.url;
       } catch (e) {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload foto gagal: ${AppFailure.from(e, action: 'mengunggah foto').message}')),
+          SnackBar(
+            content: Text(
+              'Upload foto gagal: ${AppFailure.from(e, action: 'mengunggah foto').message}',
+            ),
+          ),
         );
         return;
       }
@@ -173,9 +214,11 @@ class ProfileScreen extends ConsumerWidget {
       final err = ref.read(userUpdateProvider).error;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(err != null
-              ? AppFailure.from(err, action: 'mengubah foto profil').message
-              : 'Gagal mengubah foto profil'),
+          content: Text(
+            err != null
+                ? AppFailure.from(err, action: 'mengubah foto profil').message
+                : 'Gagal mengubah foto profil',
+          ),
           backgroundColor: AppColors.critical,
         ),
       );
@@ -203,13 +246,11 @@ class ProfileScreen extends ConsumerWidget {
 
     // Bersihkan file lama bila diganti (BACKEND.md §13.3).
     final oldKey = UploadService.objectKeyFromUrl(me.fotoUrl);
-    if (oldKey != null &&
-        oldKey.isNotEmpty &&
-        me.fotoUrl != updated.fotoUrl) {
+    if (oldKey != null && oldKey.isNotEmpty && me.fotoUrl != updated.fotoUrl) {
       UploadService(ref.read(apiClientProvider)).deletePhoto(oldKey);
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Foto profil diperbarui')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Foto profil diperbarui')));
   }
 }

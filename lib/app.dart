@@ -29,6 +29,7 @@ import 'features/users/user_form_screen.dart';
 import 'features/alerts/alerts_list_screen.dart';
 import 'features/cctv/cctv_screen.dart';
 import 'features/profile/profile_screen.dart';
+import 'features/about/about_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -162,6 +163,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/cctv', parentNavigatorKey: _rootNavigatorKey, builder: (_, _) => const CctvScreen()),
       GoRoute(path: '/profile', parentNavigatorKey: _rootNavigatorKey, builder: (_, _) => const ProfileScreen()),
+      GoRoute(path: '/about', parentNavigatorKey: _rootNavigatorKey, builder: (_, _) => const AboutScreen()),
     ],
   );
 });

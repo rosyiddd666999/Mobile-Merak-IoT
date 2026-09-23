@@ -34,7 +34,7 @@ class BreederDetailScreen extends ConsumerWidget {
       appBar: const DetailAppBar(title: 'Detail Indukan'),
       body: AsyncStateView(
         async: breederAsync,
-          actionLabel: 'memuat detail indukan',
+        actionLabel: 'memuat detail indukan',
         onRetry: () => ref.refresh(breederDetailProvider(id)),
         dataBuilder: (breeder) {
           final isJantan = breeder.jenisKelamin == 'jantan';
@@ -48,14 +48,18 @@ class BreederDetailScreen extends ConsumerWidget {
           final chicks = ref.watch(chicksListProvider).valueOrNull ?? const [];
           final eggById = {for (final e in eggs) e.id: e};
           final childEggs = eggs
-              .where((e) =>
-                  e.indukJantanId == breeder.id ||
-                  e.indukBetinaId == breeder.id)
+              .where(
+                (e) =>
+                    e.indukJantanId == breeder.id ||
+                    e.indukBetinaId == breeder.id,
+              )
               .length;
           final childBreeders = allBreeders
-              .where((b) =>
-                  b.parentJantanId == breeder.id ||
-                  b.parentBetinaId == breeder.id)
+              .where(
+                (b) =>
+                    b.parentJantanId == breeder.id ||
+                    b.parentBetinaId == breeder.id,
+              )
               .length;
           final childChicks = chicks.where((c) {
             final egg = eggById[c.eggId];
@@ -94,7 +98,8 @@ class BreederDetailScreen extends ConsumerWidget {
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                            if (breeder.nama != null && breeder.nama!.isNotEmpty)
+                            if (breeder.nama != null &&
+                                breeder.nama!.isNotEmpty)
                               Text(
                                 breeder.id,
                                 style: const TextStyle(
@@ -119,16 +124,38 @@ class BreederDetailScreen extends ConsumerWidget {
                     margin: EdgeInsets.zero,
                     child: Column(
                       children: [
-                        DetailRow(icon: Icons.wc, label: 'Jenis Kelamin', value: isJantan ? 'Jantan' : 'Betina'),
+                        DetailRow(
+                          icon: Icons.wc,
+                          label: 'Jenis Kelamin',
+                          value: isJantan ? 'Jantan' : 'Betina',
+                        ),
                         const DetailDivider(),
-                        DetailRow(icon: Icons.layers_outlined, label: 'Generasi', value: breeder.generasi),
+                        DetailRow(
+                          icon: Icons.layers_outlined,
+                          label: 'Generasi',
+                          value: breeder.generasi,
+                        ),
                         const DetailDivider(),
-                        DetailRow(icon: Icons.palette_outlined, label: 'Varian Warna', value: breeder.varianWarna),
+                        DetailRow(
+                          icon: Icons.palette_outlined,
+                          label: 'Varian Warna',
+                          value: breeder.varianWarna,
+                        ),
                         const DetailDivider(),
-                        DetailRow(icon: Icons.flag_outlined, label: 'Asal', value: _asalLabel(breeder.asal)),
+                        DetailRow(
+                          icon: Icons.flag_outlined,
+                          label: 'Asal',
+                          value: _asalLabel(breeder.asal),
+                        ),
                         if (breeder.tanggalLahir != null) ...[
                           const DetailDivider(),
-                          DetailRow(icon: Icons.cake_outlined, label: 'Tanggal Lahir', value: formatDate(breeder.tanggalLahir!.toIso8601String())),
+                          DetailRow(
+                            icon: Icons.cake_outlined,
+                            label: 'Tanggal Lahir',
+                            value: formatDate(
+                              breeder.tanggalLahir!.toIso8601String(),
+                            ),
+                          ),
                         ],
                       ],
                     ),
@@ -145,18 +172,45 @@ class BreederDetailScreen extends ConsumerWidget {
                       padding: const EdgeInsets.all(16),
                       child: Row(
                         children: [
-                          Expanded(child: _metric('Total Telur', '${breeder.totalTelur}', Icons.egg_outlined)),
-                          Container(width: 1, height: 40, color: AppColors.divider),
-                          Expanded(child: _metric('% Fertil', '${breeder.persentaseFertil.toStringAsFixed(0)}%', Icons.percent)),
-                          Container(width: 1, height: 40, color: AppColors.divider),
-                          Expanded(child: _metric('Anakan', '${breeder.jumlahAnakan}', Icons.cruelty_free)),
+                          Expanded(
+                            child: _metric(
+                              'Total Telur',
+                              '${breeder.totalTelur}',
+                              Icons.egg_outlined,
+                            ),
+                          ),
+                          Container(
+                            width: 1,
+                            height: 40,
+                            color: AppColors.divider,
+                          ),
+                          Expanded(
+                            child: _metric(
+                              '% Fertil',
+                              '${breeder.persentaseFertil.toStringAsFixed(0)}%',
+                              Icons.percent,
+                            ),
+                          ),
+                          Container(
+                            width: 1,
+                            height: 40,
+                            color: AppColors.divider,
+                          ),
+                          Expanded(
+                            child: _metric(
+                              'Anakan',
+                              '${breeder.jumlahAnakan}',
+                              Icons.flutter_dash,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ),
                 ],
               ),
-              if (breeder.parentJantanId != null || breeder.parentBetinaId != null) ...[
+              if (breeder.parentJantanId != null ||
+                  breeder.parentBetinaId != null) ...[
                 const SizedBox(height: 16),
                 DetailSection(
                   title: 'Silsilah',
@@ -170,16 +224,25 @@ class BreederDetailScreen extends ConsumerWidget {
                               icon: Icons.male,
                               label: 'Ayah',
                               value: breeder.parentJantanId!,
-                              onTap: () => context.push(AppRoutes.breederDetail(breeder.parentJantanId!)),
+                              onTap: () => context.push(
+                                AppRoutes.breederDetail(
+                                  breeder.parentJantanId!,
+                                ),
+                              ),
                             ),
-                          if (breeder.parentJantanId != null && breeder.parentBetinaId != null)
+                          if (breeder.parentJantanId != null &&
+                              breeder.parentBetinaId != null)
                             const DetailDivider(),
                           if (breeder.parentBetinaId != null)
                             DetailRow(
                               icon: Icons.female,
                               label: 'Ibu',
                               value: breeder.parentBetinaId!,
-                              onTap: () => context.push(AppRoutes.breederDetail(breeder.parentBetinaId!)),
+                              onTap: () => context.push(
+                                AppRoutes.breederDetail(
+                                  breeder.parentBetinaId!,
+                                ),
+                              ),
                             ),
                         ],
                       ),
@@ -189,7 +252,8 @@ class BreederDetailScreen extends ConsumerWidget {
               ],
               const SizedBox(height: 24),
               OutlinedButton.icon(
-                onPressed: () => context.push('${AppRoutes.breederDetail(breeder.id)}/edit'),
+                onPressed: () =>
+                    context.push('${AppRoutes.breederDetail(breeder.id)}/edit'),
                 icon: const Icon(Icons.edit_outlined),
                 label: const Text('Edit nomor'),
               ),
@@ -199,22 +263,24 @@ class BreederDetailScreen extends ConsumerWidget {
                   onPressed: deleting
                       ? null
                       : () => _onDelete(
-                            context,
-                            ref,
-                            breeder.id,
-                            breeder.nama ?? breeder.id,
-                            childEggs,
-                            childBreeders,
-                            childChicks,
-                          ),
+                          context,
+                          ref,
+                          breeder.id,
+                          breeder.nama ?? breeder.id,
+                          childEggs,
+                          childBreeders,
+                          childChicks,
+                        ),
                   icon: deleting
                       ? const SizedBox(
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.delete_outline,
-                          color: AppColors.critical),
+                      : const Icon(
+                          Icons.delete_outline,
+                          color: AppColors.critical,
+                        ),
                   label: Text(
                     deleting ? 'Menghapus…' : 'Hapus indukan',
                     style: const TextStyle(color: AppColors.critical),
@@ -278,9 +344,9 @@ class BreederDetailScreen extends ConsumerWidget {
     ref.invalidate(breedersListProvider);
     ref.invalidate(dashboardProvider);
     ref.read(breederDeleteProvider.notifier).reset();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Indukan berhasil dihapus')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Indukan berhasil dihapus')));
     context.pop();
   }
 

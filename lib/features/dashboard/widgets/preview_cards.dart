@@ -149,7 +149,7 @@ class ChickPreview extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.all(20),
           child: EmptyState(
-            icon: Icons.cruelty_free,
+            icon: Icons.flutter_dash,
             message: 'Data anakan tidak tersedia',
           ),
         ),
@@ -161,7 +161,7 @@ class ChickPreview extends StatelessWidget {
             child: Padding(
               padding: EdgeInsets.all(20),
               child: EmptyState(
-                icon: Icons.cruelty_free,
+                icon: Icons.flutter_dash,
                 message: 'Belum ada anakan menetas',
               ),
             ),

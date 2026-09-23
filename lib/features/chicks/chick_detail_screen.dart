@@ -25,14 +25,13 @@ class ChickDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final chickAsync = ref.watch(chickDetailProvider(id));
     final user = ref.watch(currentUserProvider);
-    final canDelete =
-        user?.role == 'pemilik' || user?.role == 'staff';
+    final canDelete = user?.role == 'pemilik' || user?.role == 'staff';
 
     return Scaffold(
       appBar: const DetailAppBar(title: 'Detail Anakan'),
       body: AsyncStateView(
         async: chickAsync,
-          actionLabel: 'memuat detail anakan',
+        actionLabel: 'memuat detail anakan',
         onRetry: () => ref.refresh(chickDetailProvider(id)),
         dataBuilder: (chick) {
           final deleting = ref.watch(chickDeleteProvider).isLoading;
@@ -49,7 +48,11 @@ class ChickDetailScreen extends ConsumerWidget {
                         radius: 32,
                         url: chick.fotoUrl,
                         backgroundColor: AppColors.tertiary,
-                        fallback: const Icon(Icons.cruelty_free, color: AppColors.tertiary, size: 32),
+                        fallback: const Icon(
+                          Icons.flutter_dash,
+                          color: AppColors.tertiary,
+                          size: 32,
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -58,12 +61,18 @@ class ChickDetailScreen extends ConsumerWidget {
                           children: [
                             Text(
                               chick.id,
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               formatDate(chick.tanggalMenetas),
-                              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                             const SizedBox(height: 6),
                             StatusChip(label: status.$1, status: status.$2),
@@ -82,21 +91,45 @@ class ChickDetailScreen extends ConsumerWidget {
                     margin: EdgeInsets.zero,
                     child: Column(
                       children: [
-                        DetailRow(icon: Icons.egg_outlined, label: 'Egg ID', value: chick.eggId),
+                        DetailRow(
+                          icon: Icons.egg_outlined,
+                          label: 'Egg ID',
+                          value: chick.eggId,
+                        ),
                         if (chick.indukJantanId != null) ...[
                           const DetailDivider(),
-                          DetailRow(icon: Icons.male, label: 'Indukan Jantan', value: chick.indukJantanId!),
+                          DetailRow(
+                            icon: Icons.male,
+                            label: 'Indukan Jantan',
+                            value: chick.indukJantanId!,
+                          ),
                         ],
                         if (chick.indukBetinaId != null) ...[
                           const DetailDivider(),
-                          DetailRow(icon: Icons.female, label: 'Indukan Betina', value: chick.indukBetinaId!),
+                          DetailRow(
+                            icon: Icons.female,
+                            label: 'Indukan Betina',
+                            value: chick.indukBetinaId!,
+                          ),
                         ],
                         const DetailDivider(),
-                        DetailRow(icon: Icons.monitor_weight_outlined, label: 'Berat Awal', value: '${chick.beratAwal.toStringAsFixed(0)} gram'),
+                        DetailRow(
+                          icon: Icons.monitor_weight_outlined,
+                          label: 'Berat Awal',
+                          value: '${chick.beratAwal.toStringAsFixed(0)} gram',
+                        ),
                         const DetailDivider(),
-                        DetailRow(icon: Icons.health_and_safety_outlined, label: 'Skor Kesehatan', value: chick.skorKesehatan),
+                        DetailRow(
+                          icon: Icons.health_and_safety_outlined,
+                          label: 'Skor Kesehatan',
+                          value: chick.skorKesehatan,
+                        ),
                         const DetailDivider(),
-                        DetailRow(icon: Icons.flag_outlined, label: 'Status', value: status.$1),
+                        DetailRow(
+                          icon: Icons.flag_outlined,
+                          label: 'Status',
+                          value: status.$1,
+                        ),
                       ],
                     ),
                   ),
@@ -108,7 +141,8 @@ class ChickDetailScreen extends ConsumerWidget {
               ],
               const SizedBox(height: 24),
               OutlinedButton.icon(
-                onPressed: () => context.push('${AppRoutes.chickDetail(chick.id)}/edit'),
+                onPressed: () =>
+                    context.push('${AppRoutes.chickDetail(chick.id)}/edit'),
                 icon: const Icon(Icons.edit_outlined),
                 label: const Text('Edit nomor'),
               ),
@@ -124,8 +158,10 @@ class ChickDetailScreen extends ConsumerWidget {
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.delete_outline,
-                          color: AppColors.critical),
+                      : const Icon(
+                          Icons.delete_outline,
+                          color: AppColors.critical,
+                        ),
                   label: Text(
                     deleting ? 'Menghapus…' : 'Hapus anakan',
                     style: const TextStyle(color: AppColors.critical),
@@ -151,7 +187,8 @@ class ChickDetailScreen extends ConsumerWidget {
     final ok = await showConfirmDialog(
       context,
       title: 'Hapus anakan?',
-      message: 'Anakan $chickId akan dihapus permanen dan tidak bisa dibatalkan.',
+      message:
+          'Anakan $chickId akan dihapus permanen dan tidak bisa dibatalkan.',
       confirmText: 'Hapus',
     );
     if (!ok || !context.mounted) return;
@@ -171,9 +208,9 @@ class ChickDetailScreen extends ConsumerWidget {
     ref.invalidate(chicksListProvider);
     ref.invalidate(dashboardProvider);
     ref.read(chickDeleteProvider.notifier).reset();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Anakan berhasil dihapus')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Anakan berhasil dihapus')));
     context.pop();
   }
 }

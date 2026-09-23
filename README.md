@@ -102,12 +102,27 @@
 
 ## 📸 Screenshots
 
-> Replace the placeholders below with real captures (`docs/screenshots/*.png`). Ganti placeholder di bawah dengan tangkapan layar asli.
+Preview aplikasi — Splash, Login, Dashboard, Inkubator IoT, Indukan, Telur & Keuangan.
 
-| Dashboard | Inkubator IoT | Indukan |
-|:---------:|:-------------:|:-------:|
-| ![](docs/screenshots/dashboard.png) | ![](docs/screenshots/incubator.png) | ![](docs/screenshots/breeders.png) |
-| Farm overview | Telemetry & control | Breeder list & lineage |
+| Splash | Login | Dashboard |
+|:------:|:-----:|:---------:|
+| <img src="assets/screenshoot/splash.png" width="250" /> | <img src="assets/screenshoot/login.jpeg" width="250" /> | <img src="assets/screenshoot/dashboard.jpeg" width="250" /> |
+| Kerjasama Pertamina | Masuk aplikasi | Ringkasan peternakan |
+
+| Inkubator IoT | Indukan | Telur |
+|:-------------:|:-------:|:-----:|
+| <img src="assets/screenshoot/incubator.jpeg" width="250" /> | <img src="assets/screenshoot/indukan.jpeg" width="250" /> | <img src="assets/screenshoot/telur.jpeg" width="250" /> |
+| Telemetri & kontrol | Daftar indukan | Pelacakan telur |
+
+| Keuangan | Detail Indukan | Form |
+|:--------:|:--------------:|:----:|
+| <img src="assets/screenshoot/keuangan.jpeg" width="250" /> | <img src="assets/screenshoot/detail-indukan.jpeg" width="250" /> | <img src="assets/screenshoot/form-indukan.jpeg" width="250" /> |
+| Valuasi & ekspor PDF | Profil & silsilah | Tambah data |
+
+| Form Telur | Form Keuangan | Lainnya |
+|:----------:|:-------------:|:-------:|
+| <img src="assets/screenshoot/form-telur.jpeg" width="250" /> | <img src="assets/screenshoot/form-keangan.jpeg" width="250" /> | <img src="assets/screenshoot/keuangan2.jpeg" width="250" /> |
+| Input telur | Input transaksi | Riwayat transaksi |
 
 ---
 
