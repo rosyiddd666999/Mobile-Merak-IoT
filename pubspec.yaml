@@ -67,7 +67,7 @@ flutter:
     - assets/images/logo-nb.png
     - assets/images/logo.png
     - assets/images/logo-kel-merak.jpeg
-    - assets/images/logo-pertamina.jpeg
+    - assets/images/logo-pertamina.png
 
 flutter_launcher_icons:
   android: true

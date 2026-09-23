@@ -8,16 +8,18 @@ class PartnerLogos extends StatelessWidget {
   final double size;
   final bool showLabel;
   final bool wide;
+  final MainAxisAlignment alignment;
 
   const PartnerLogos({
     super.key,
     this.size = 40,
     this.showLabel = false,
     this.wide = false,
+    this.alignment = MainAxisAlignment.center,
   });
 
   static const _squareLogo = 'assets/images/logo-kel-merak.jpeg';
-  static const _wideLogo = 'assets/images/logo-pertamina.jpeg';
+  static const _wideLogo = 'assets/images/logo-pertamina.png';
 
   Widget _box(String asset, {required double width, required double height}) {
     return Container(
@@ -39,7 +41,10 @@ class PartnerLogos extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final row = Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: alignment == MainAxisAlignment.spaceBetween
+          ? MainAxisSize.max
+          : MainAxisSize.min,
+      mainAxisAlignment: alignment,
       children: [
         _box(_wideLogo, width: wide ? size * 2.8 : size, height: size),
         SizedBox(width: size * 0.22),
