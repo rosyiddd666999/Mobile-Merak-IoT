@@ -12,11 +12,11 @@ import '../../data/providers/chicks_provider.dart';
 import '../../data/providers/dashboard_provider.dart';
 import '../../data/providers/eggs_provider.dart';
 import '../../shared/async_state_view.dart';
-import '../../shared/app_photo.dart';
 import '../../shared/confirm_dialog.dart';
 import '../../shared/design_kit.dart';
 import '../../shared/detail_app_bar.dart';
 import '../../shared/detail_section.dart';
+import '../../shared/product_photo_hero.dart';
 
 class BreederDetailScreen extends ConsumerWidget {
   final String id;
@@ -69,227 +69,243 @@ class BreederDetailScreen extends ConsumerWidget {
           }).length;
 
           return ListView(
-            padding: const EdgeInsets.all(16),
             children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      AppPhotoCircle(
-                        radius: 32,
-                        url: breeder.fotoUrl,
-                        backgroundColor: genderColor,
-                        fallback: Icon(
-                          isJantan ? Icons.male : Icons.female,
-                          color: genderColor,
-                          size: 36,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: ProductPhotoHero(
+                  url: breeder.fotoUrl,
+                  heroTag: 'breeder-${breeder.id}',
+                  statusChip: StatusChip(label: status.$1, status: status.$2),
+                  fallback: Icon(
+                    isJantan ? Icons.male : Icons.female,
+                    color: genderColor,
+                    size: 72,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Card(
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               breeder.nama ?? breeder.id,
                               style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                             if (breeder.nama != null &&
                                 breeder.nama!.isNotEmpty)
-                              Text(
-                                breeder.id,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary,
+                              SizedBox(
+                                width: double.infinity,
+                                child: Text(
+                                  breeder.id,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
                               ),
-                            const SizedBox(height: 6),
-                            StatusChip(label: status.$1, status: status.$2),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${isJantan ? 'Jantan' : 'Betina'} · ${breeder.generasi} · ${breeder.varianWarna}',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              DetailSection(
-                title: 'Informasi',
-                children: [
-                  Card(
-                    margin: EdgeInsets.zero,
-                    child: Column(
+                    ),
+                    const SizedBox(height: 16),
+                    DetailSection(
+                      title: 'Informasi',
                       children: [
-                        DetailRow(
-                          icon: Icons.wc,
-                          label: 'Jenis Kelamin',
-                          value: isJantan ? 'Jantan' : 'Betina',
-                        ),
-                        const DetailDivider(),
-                        DetailRow(
-                          icon: Icons.layers_outlined,
-                          label: 'Generasi',
-                          value: breeder.generasi,
-                        ),
-                        const DetailDivider(),
-                        DetailRow(
-                          icon: Icons.palette_outlined,
-                          label: 'Varian Warna',
-                          value: breeder.varianWarna,
-                        ),
-                        const DetailDivider(),
-                        DetailRow(
-                          icon: Icons.flag_outlined,
-                          label: 'Asal',
-                          value: _asalLabel(breeder.asal),
-                        ),
-                        if (breeder.tanggalLahir != null) ...[
-                          const DetailDivider(),
-                          DetailRow(
-                            icon: Icons.cake_outlined,
-                            label: 'Tanggal Lahir',
-                            value: formatDate(
-                              breeder.tanggalLahir!.toIso8601String(),
-                            ),
+                        Card(
+                          margin: EdgeInsets.zero,
+                          child: Column(
+                            children: [
+                              DetailRow(
+                                icon: Icons.wc,
+                                label: 'Jenis Kelamin',
+                                value: isJantan ? 'Jantan' : 'Betina',
+                              ),
+                              const DetailDivider(),
+                              DetailRow(
+                                icon: Icons.layers_outlined,
+                                label: 'Generasi',
+                                value: breeder.generasi,
+                              ),
+                              const DetailDivider(),
+                              DetailRow(
+                                icon: Icons.palette_outlined,
+                                label: 'Varian Warna',
+                                value: breeder.varianWarna,
+                              ),
+                              const DetailDivider(),
+                              DetailRow(
+                                icon: Icons.flag_outlined,
+                                label: 'Asal',
+                                value: _asalLabel(breeder.asal),
+                              ),
+                              if (breeder.tanggalLahir != null) ...[
+                                const DetailDivider(),
+                                DetailRow(
+                                  icon: Icons.cake_outlined,
+                                  label: 'Tanggal Lahir',
+                                  value: formatDate(
+                                    breeder.tanggalLahir!.toIso8601String(),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
-                        ],
+                        ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              DetailSection(
-                title: 'Performa',
-                children: [
-                  Card(
-                    margin: EdgeInsets.zero,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
+                    const SizedBox(height: 16),
+                    DetailSection(
+                      title: 'Performa',
+                      children: [
+                        Card(
+                          margin: EdgeInsets.zero,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: _metric(
+                                    'Total Telur',
+                                    '${breeder.totalTelur}',
+                                    Icons.egg_outlined,
+                                  ),
+                                ),
+                                Container(
+                                  width: 1,
+                                  height: 40,
+                                  color: AppColors.divider,
+                                ),
+                                Expanded(
+                                  child: _metric(
+                                    '% Fertil',
+                                    '${breeder.persentaseFertil.toStringAsFixed(0)}%',
+                                    Icons.percent,
+                                  ),
+                                ),
+                                Container(
+                                  width: 1,
+                                  height: 40,
+                                  color: AppColors.divider,
+                                ),
+                                Expanded(
+                                  child: _metric(
+                                    'Anakan',
+                                    '${breeder.jumlahAnakan}',
+                                    Icons.flutter_dash,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (breeder.parentJantanId != null ||
+                        breeder.parentBetinaId != null) ...[
+                      const SizedBox(height: 16),
+                      DetailSection(
+                        title: 'Silsilah',
                         children: [
-                          Expanded(
-                            child: _metric(
-                              'Total Telur',
-                              '${breeder.totalTelur}',
-                              Icons.egg_outlined,
-                            ),
-                          ),
-                          Container(
-                            width: 1,
-                            height: 40,
-                            color: AppColors.divider,
-                          ),
-                          Expanded(
-                            child: _metric(
-                              '% Fertil',
-                              '${breeder.persentaseFertil.toStringAsFixed(0)}%',
-                              Icons.percent,
-                            ),
-                          ),
-                          Container(
-                            width: 1,
-                            height: 40,
-                            color: AppColors.divider,
-                          ),
-                          Expanded(
-                            child: _metric(
-                              'Anakan',
-                              '${breeder.jumlahAnakan}',
-                              Icons.flutter_dash,
+                          Card(
+                            margin: EdgeInsets.zero,
+                            child: Column(
+                              children: [
+                                if (breeder.parentJantanId != null)
+                                  DetailRow(
+                                    icon: Icons.male,
+                                    label: 'Ayah',
+                                    value: breeder.parentJantanId!,
+                                    onTap: () => context.push(
+                                      AppRoutes.breederDetail(
+                                        breeder.parentJantanId!,
+                                      ),
+                                    ),
+                                  ),
+                                if (breeder.parentJantanId != null &&
+                                    breeder.parentBetinaId != null)
+                                  const DetailDivider(),
+                                if (breeder.parentBetinaId != null)
+                                  DetailRow(
+                                    icon: Icons.female,
+                                    label: 'Ibu',
+                                    value: breeder.parentBetinaId!,
+                                    onTap: () => context.push(
+                                      AppRoutes.breederDetail(
+                                        breeder.parentBetinaId!,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                ],
-              ),
-              if (breeder.parentJantanId != null ||
-                  breeder.parentBetinaId != null) ...[
-                const SizedBox(height: 16),
-                DetailSection(
-                  title: 'Silsilah',
-                  children: [
-                    Card(
-                      margin: EdgeInsets.zero,
-                      child: Column(
-                        children: [
-                          if (breeder.parentJantanId != null)
-                            DetailRow(
-                              icon: Icons.male,
-                              label: 'Ayah',
-                              value: breeder.parentJantanId!,
-                              onTap: () => context.push(
-                                AppRoutes.breederDetail(
-                                  breeder.parentJantanId!,
-                                ),
-                              ),
-                            ),
-                          if (breeder.parentJantanId != null &&
-                              breeder.parentBetinaId != null)
-                            const DetailDivider(),
-                          if (breeder.parentBetinaId != null)
-                            DetailRow(
-                              icon: Icons.female,
-                              label: 'Ibu',
-                              value: breeder.parentBetinaId!,
-                              onTap: () => context.push(
-                                AppRoutes.breederDetail(
-                                  breeder.parentBetinaId!,
-                                ),
-                              ),
-                            ),
-                        ],
+                    ],
+                    const SizedBox(height: 24),
+                    OutlinedButton.icon(
+                      onPressed: () => context.push(
+                        '${AppRoutes.breederDetail(breeder.id)}/edit',
                       ),
+                      icon: const Icon(Icons.edit_outlined),
+                      label: const Text('Edit nomor'),
                     ),
+                    if (canDelete) ...[
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: deleting
+                            ? null
+                            : () => _onDelete(
+                                context,
+                                ref,
+                                breeder.id,
+                                breeder.nama ?? breeder.id,
+                                childEggs,
+                                childBreeders,
+                                childChicks,
+                              ),
+                        icon: deleting
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.delete_outline,
+                                color: AppColors.critical,
+                              ),
+                        label: Text(
+                          deleting ? 'Menghapus…' : 'Hapus indukan',
+                          style: const TextStyle(color: AppColors.critical),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppColors.critical),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
-              ],
-              const SizedBox(height: 24),
-              OutlinedButton.icon(
-                onPressed: () =>
-                    context.push('${AppRoutes.breederDetail(breeder.id)}/edit'),
-                icon: const Icon(Icons.edit_outlined),
-                label: const Text('Edit nomor'),
               ),
-              if (canDelete) ...[
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: deleting
-                      ? null
-                      : () => _onDelete(
-                          context,
-                          ref,
-                          breeder.id,
-                          breeder.nama ?? breeder.id,
-                          childEggs,
-                          childBreeders,
-                          childChicks,
-                        ),
-                  icon: deleting
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(
-                          Icons.delete_outline,
-                          color: AppColors.critical,
-                        ),
-                  label: Text(
-                    deleting ? 'Menghapus…' : 'Hapus indukan',
-                    style: const TextStyle(color: AppColors.critical),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.critical),
-                  ),
-                ),
-              ],
             ],
           );
         },

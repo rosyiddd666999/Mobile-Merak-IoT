@@ -13,6 +13,7 @@ import '../../data/providers/auth_provider.dart';
 import '../../shared/async_state_view.dart';
 import '../../shared/design_kit.dart';
 import '../../shared/root_app_bar.dart';
+import 'finance_report_filter.dart';
 import 'finance_report_pdf.dart';
 import 'widgets/finance_entry_card.dart';
 
@@ -382,7 +383,7 @@ class _ExportCardState extends State<_ExportCard> {
                 ),
               ),
               subtitle: Text(
-                '${entries.length} entri',
+                _reportSubtitle(reports[i]),
                 style: const TextStyle(
                   fontSize: 11,
                   color: AppColors.textMuted,
@@ -441,11 +442,36 @@ class _ExportCardState extends State<_ExportCard> {
     );
   }
 
+  String _reportSubtitle(String kind) {
+    final count = filterReportEntries(kind, entries).length;
+    switch (kind.toLowerCase()) {
+      case 'arus kas':
+        return '$count entri · rekap per bulan';
+      case 'penjualan':
+        return '$count entri · khusus penjualan';
+      case 'operasional':
+        return '$count entri · khusus biaya';
+      default:
+        return '$count entri · semua transaksi';
+    }
+  }
+
   String _buildCsv(String kind) {
+    if (kind.toLowerCase() == 'arus kas') {
+      final monthly = groupMonthly(filterReportEntries(kind, entries));
+      final buf = StringBuffer('laporan,bulan,masuk,keluar,bersih\n');
+      for (final entry in monthly.entries) {
+        buf.writeln(
+          '$kind,${entry.key},${entry.value.masuk},${entry.value.keluar},${entry.value.bersih}',
+        );
+      }
+      return buf.toString();
+    }
+    final filtered = filterReportEntries(kind, entries);
     final buf = StringBuffer(
       'laporan,id,tanggal,tipe,kategori,jumlah,catatan\n',
     );
-    for (final e in entries) {
+    for (final e in filtered) {
       buf.writeln(
         '$kind,${e.id},${e.tanggal},${e.tipe},${e.kategori},${e.jumlah},${(e.catatan ?? '-').replaceAll(',', ' ')}',
       );

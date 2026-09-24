@@ -10,11 +10,11 @@ import '../../data/providers/auth_provider.dart';
 import '../../data/providers/chicks_provider.dart';
 import '../../data/providers/dashboard_provider.dart';
 import '../../shared/async_state_view.dart';
-import '../../shared/app_photo.dart';
 import '../../shared/confirm_dialog.dart';
 import '../../shared/design_kit.dart';
 import '../../shared/detail_app_bar.dart';
 import '../../shared/detail_section.dart';
+import '../../shared/product_photo_hero.dart';
 
 class ChickDetailScreen extends ConsumerWidget {
   final String id;
@@ -37,140 +37,150 @@ class ChickDetailScreen extends ConsumerWidget {
           final deleting = ref.watch(chickDeleteProvider).isLoading;
           final status = StatusMapper.chick(chick.status);
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.zero,
             children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      AppPhotoCircle(
-                        radius: 32,
-                        url: chick.fotoUrl,
-                        backgroundColor: AppColors.tertiary,
-                        fallback: const Icon(
-                          Icons.flutter_dash,
-                          color: AppColors.tertiary,
-                          size: 32,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              chick.id,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              formatDate(chick.tanggalMenetas),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            StatusChip(label: status.$1, status: status.$2),
-                          ],
-                        ),
-                      ),
-                    ],
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: ProductPhotoHero(
+                  url: chick.fotoUrl,
+                  heroTag: 'chick-${chick.id}',
+                  statusChip: StatusChip(label: status.$1, status: status.$2),
+                  fallback: const Icon(
+                    Icons.flutter_dash,
+                    color: AppColors.tertiary,
+                    size: 72,
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              DetailSection(
-                title: 'Informasi',
-                children: [
-                  Card(
-                    margin: EdgeInsets.zero,
-                    child: Column(
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Card(
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                chick.id,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${formatDate(chick.tanggalMenetas)} · ${chick.beratAwal.toStringAsFixed(0)} gram',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    DetailSection(
+                      title: 'Informasi',
                       children: [
-                        DetailRow(
-                          icon: Icons.egg_outlined,
-                          label: 'Egg ID',
-                          value: chick.eggId,
-                        ),
-                        if (chick.indukJantanId != null) ...[
-                          const DetailDivider(),
-                          DetailRow(
-                            icon: Icons.male,
-                            label: 'Indukan Jantan',
-                            value: chick.indukJantanId!,
+                        Card(
+                          margin: EdgeInsets.zero,
+                          child: Column(
+                            children: [
+                              DetailRow(
+                                icon: Icons.egg_outlined,
+                                label: 'Egg ID',
+                                value: chick.eggId,
+                              ),
+                              if (chick.indukJantanId != null) ...[
+                                const DetailDivider(),
+                                DetailRow(
+                                  icon: Icons.male,
+                                  label: 'Indukan Jantan',
+                                  value: chick.indukJantanId!,
+                                ),
+                              ],
+                              if (chick.indukBetinaId != null) ...[
+                                const DetailDivider(),
+                                DetailRow(
+                                  icon: Icons.female,
+                                  label: 'Indukan Betina',
+                                  value: chick.indukBetinaId!,
+                                ),
+                              ],
+                              const DetailDivider(),
+                              DetailRow(
+                                icon: Icons.monitor_weight_outlined,
+                                label: 'Berat Awal',
+                                value:
+                                    '${chick.beratAwal.toStringAsFixed(0)} gram',
+                              ),
+                              const DetailDivider(),
+                              DetailRow(
+                                icon: Icons.health_and_safety_outlined,
+                                label: 'Skor Kesehatan',
+                                value: chick.skorKesehatan,
+                              ),
+                              const DetailDivider(),
+                              DetailRow(
+                                icon: Icons.flag_outlined,
+                                label: 'Status',
+                                value: status.$1,
+                              ),
+                            ],
                           ),
-                        ],
-                        if (chick.indukBetinaId != null) ...[
-                          const DetailDivider(),
-                          DetailRow(
-                            icon: Icons.female,
-                            label: 'Indukan Betina',
-                            value: chick.indukBetinaId!,
-                          ),
-                        ],
-                        const DetailDivider(),
-                        DetailRow(
-                          icon: Icons.monitor_weight_outlined,
-                          label: 'Berat Awal',
-                          value: '${chick.beratAwal.toStringAsFixed(0)} gram',
-                        ),
-                        const DetailDivider(),
-                        DetailRow(
-                          icon: Icons.health_and_safety_outlined,
-                          label: 'Skor Kesehatan',
-                          value: chick.skorKesehatan,
-                        ),
-                        const DetailDivider(),
-                        DetailRow(
-                          icon: Icons.flag_outlined,
-                          label: 'Status',
-                          value: status.$1,
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-              if (chick.catatan != null && chick.catatan!.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                DetailNote(chick.catatan),
-              ],
-              const SizedBox(height: 24),
-              OutlinedButton.icon(
-                onPressed: () =>
-                    context.push('${AppRoutes.chickDetail(chick.id)}/edit'),
-                icon: const Icon(Icons.edit_outlined),
-                label: const Text('Edit nomor'),
-              ),
-              if (canDelete) ...[
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: deleting
-                      ? null
-                      : () => _onDelete(context, ref, chick.id),
-                  icon: deleting
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(
-                          Icons.delete_outline,
-                          color: AppColors.critical,
+                    if (chick.catatan != null && chick.catatan!.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      DetailNote(chick.catatan),
+                    ],
+                    const SizedBox(height: 24),
+                    OutlinedButton.icon(
+                      onPressed: () => context.push(
+                        '${AppRoutes.chickDetail(chick.id)}/edit',
+                      ),
+                      icon: const Icon(Icons.edit_outlined),
+                      label: const Text('Edit nomor'),
+                    ),
+                    if (canDelete) ...[
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: deleting
+                            ? null
+                            : () => _onDelete(context, ref, chick.id),
+                        icon: deleting
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.delete_outline,
+                                color: AppColors.critical,
+                              ),
+                        label: Text(
+                          deleting ? 'Menghapus…' : 'Hapus anakan',
+                          style: const TextStyle(color: AppColors.critical),
                         ),
-                  label: Text(
-                    deleting ? 'Menghapus…' : 'Hapus anakan',
-                    style: const TextStyle(color: AppColors.critical),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.critical),
-                  ),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppColors.critical),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ],
+              ),
             ],
           );
         },

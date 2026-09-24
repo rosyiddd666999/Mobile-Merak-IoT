@@ -35,7 +35,7 @@
 <p align="center">
   <!-- Quality & release -->
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="License: MIT" /></a>
-  <img src="https://img.shields.io/badge/Version-1.0.0-orange?style=flat-square" alt="Version 1.0.0" />
+  <img src="https://img.shields.io/badge/Version-1.1.0-orange?style=flat-square" alt="Version 1.1.0" />
   <img src="https://img.shields.io/badge/Build-passing-brightgreen?style=flat-square" alt="Build status (placeholder — add .github/workflows/flutter.yml to make it live)" />
 </p>
 
